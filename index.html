@@ -1558,7 +1558,7 @@ const ROOM_PRESETS = [
 ];
 
 /* 화면에 찍히는 판 번호. 실기에서 «고쳤는데 그대로다» 를 가르는 유일한 단서다. */
-const BUILD = "2026-09-28 · p39";
+const BUILD = "2026-09-28 · p40";
 
 const KEYOPT = "room-planner/opt";
 let opt = { score:true, walk:true, unit:"mm", guide:0 };
@@ -2165,20 +2165,13 @@ function drawRoom(){
     svg.appendChild(g);
   }
 
-  for (const c of cl){
-    svg.appendChild(el("rect", { x:c.x0, y:c.y0, width:c.w, height:c.h,
-      fill:"var(--bad)", "fill-opacity":".38", stroke:"var(--bad)", "stroke-width":12 }));
-    if (c.w > 380 && c.h > 200)
-      svg.appendChild(txt({ x:c.x0+c.w/2, y:c.y0+c.h/2+34, "text-anchor":"middle",
-        "font-family":"IBM Plex Mono,monospace", "font-size":94, "font-weight":600,
-        fill:"var(--bad)" }, `${Math.round(c.w)}×${Math.round(c.h)}`));
-  }
+  asDyn(() => drawClashes(cl));      /* p40 — 겹침 표시. 끄는 동안 dragPatch 가 이것만 다시 그린다 */
 
   svg.appendChild(el("rect", { x:0, y:0, width:r.w, height:r.d, fill:"none",
     stroke:"var(--ink)", "stroke-width":26 }));
 
   drawOpenings();     /* 벽선을 그린 뒤라야 개구부가 벽을 끊어 보인다 */
-  drawClearance();
+  asDyn(drawClearance);
 
   const dim = el("g", { stroke:"var(--muted)", "stroke-width":10, fill:"none" });
   dim.appendChild(el("line", { x1:0, y1:-320, x2:r.w, y2:-320, "marker-start":"url(#mk)", "marker-end":"url(#mk)" }));
@@ -2190,9 +2183,54 @@ function drawRoom(){
     "font-size":120, fill:"var(--muted)", transform:`rotate(-90 -400 ${r.d/2})` }, String(r.d)));
 
   drawSuggest();
-  drawGuides();
+  asDyn(drawGuides);
   placeLabels();          /* p32 — 모든 도면 글자를 한 번에, 안 겹치게 */
 }
+/* ============ p40 — 끄는 동안의 가벼운 그리기 ============
+   도면을 통째로(replaceChildren) 다시 만들면 SVG 글자 전부가 다시 배치돼 느린 폰에서 한 프레임이 50ms 를 넘었다.
+   끄는 동안 바뀌는 것만: 끄는 가구의 자리, 겹침 표시(.clash·빨간 사각형), 사용 여유, 거리선과 그 글자(.dyn).
+   통로·문 막힘·다른 글자는 첫 프레임에 흐리게 그려 둔 그대로 두고, 손을 떼면 refreshAll 이 통째로 다시 그린다. */
+function asDyn(fn){
+  const n0 = svg.childNodes.length, l0 = pendingLabels.length;
+  fn();
+  const k = svg.childNodes;
+  for (let i = n0; i < k.length; i++) k[i].classList.add("dyn");
+  for (let i = l0; i < pendingLabels.length; i++){
+    const a = pendingLabels[i].attr || {};
+    pendingLabels[i].attr = Object.assign({}, a, { class:((a.class || "") + " dyn").trim() });
+  }
+}
+function drawClashes(cl){
+  for (const c of cl){
+    svg.appendChild(el("rect", { x:c.x0, y:c.y0, width:c.w, height:c.h,
+      fill:"var(--bad)", "fill-opacity":".38", stroke:"var(--bad)", "stroke-width":12 }));
+    if (c.w > 380 && c.h > 200)
+      svg.appendChild(txt({ x:c.x0+c.w/2, y:c.y0+c.h/2+34, "text-anchor":"middle",
+        "font-family":"IBM Plex Mono,monospace", "font-size":94, "font-weight":600,
+        fill:"var(--bad)" }, `${Math.round(c.w)}×${Math.round(c.h)}`));
+  }
+}
+function dragPatch(){
+  if (mode !== "room" || !drag || tape) return false;
+  const it = ITEM(drag.uid);
+  if (!it || it.room !== curRoom) return false;
+  const g = [...svg.querySelectorAll(".fg")].find(n => n.getAttribute("data-uid") === it.uid);
+  if (!g) return false;
+  const f = foot(it);
+  for (const q of g.querySelectorAll("rect.body, rect.hatch")){ q.setAttribute("x", it.x); q.setAttribute("y", it.y); }
+  const tg = g.querySelector(":scope > g");
+  if (tg) tg.setAttribute("transform",
+    tg.getAttribute("transform").replace(/translate\([^)]*\)/, `translate(${it.x + f.w / 2} ${it.y + f.d / 2})`));
+  const cl = clashes(), hot = new Set();
+  for (const c of cl){ hot.add(c.a); hot.add(c.b); }
+  for (const n of svg.querySelectorAll(".fg")) n.classList.toggle("clash", hot.has(n.getAttribute("data-uid")));
+  for (const n of svg.querySelectorAll(".dyn")) n.remove();
+  pendingLabels = [];
+  asDyn(() => { drawClashes(cl); drawClearance(); drawGuides(); });
+  placeLabels();
+  return true;
+}
+
 function drawGuides(){
   const r = R();
   if (!sel) return;
@@ -2435,6 +2473,27 @@ function onDown(e){
   startPan(m, pt, e);
 }
 
+/* p40 — P2-5 끌기 최적화.
+   pointermove 는 한 프레임에 여러 번 온다(폰 120Hz 터치, 마우스). 그때마다 도면 전체를 다시 그리면
+   느린 폰에서 한 프레임이 60ms 를 넘었다. 좌표·자리 계산·SLOP·핀치·포인터 장부는 onMove 에서 바로 하고,
+   «그리기» 만 마지막 것 하나를 requestAnimationFrame 으로 한 프레임에 한 번.
+   ⚠️ 손을 떼면(onUp) 남은 그리기는 버린다 — onUp 이 어차피 다시 그린다(줄자는 예외, 거기서 직접 그림). */
+let moveQ = null, moveRaf = 0;
+function queueMove(fn){ moveQ = fn; if (!moveRaf) moveRaf = requestAnimationFrame(flushMove); }
+function flushMove(){ moveRaf = 0; const f = moveQ; moveQ = null; if (f) f(); }
+function dropMove(){
+  const had = !!moveQ; moveQ = null;
+  if (moveRaf){ cancelAnimationFrame(moveRaf); moveRaf = 0; }
+  return had;
+}
+/* 끄는 첫 프레임만 통째로 그리고(여기서 통로가 흐려진다), 그다음부터는 dragPatch — 끄는 가구와 .dyn 표시만.
+   selBox 도 통째로(innerHTML) 다시 만들면 페이지 전체 레이아웃이 돌아서 벽까지 거리 넷만, 그것도 0.15초에 한 번(selBoxSoon). */
+function dragFrame(){
+  if (drag && drag.fast && dragPatch()){ selBoxSoon(); return; }
+  renderScene(); renderSelBox();
+  if (drag && drag.moved) drag.fast = true;
+}
+
 function onMove(e){
   if (e.pointerId !== undefined && pts.has(e.pointerId))
     pts.set(e.pointerId, { x:e.clientX, y:e.clientY });
@@ -2461,7 +2520,7 @@ function onMove(e){
       tape.bx = q.x; tape.by = q.y;
     }
     if (e.cancelable) e.preventDefault();
-    renderScene();
+    queueMove(renderScene);
     return;
   }
 
@@ -2470,7 +2529,7 @@ function onMove(e){
     traceRect.x = Math.min(traceRect.ax, m.x); traceRect.y = Math.min(traceRect.ay, m.y);
     traceRect.w = Math.abs(m.x - traceRect.ax); traceRect.d = Math.abs(m.y - traceRect.ay);
     if (e.cancelable) e.preventDefault();
-    renderScene();
+    queueMove(renderScene);
     return;
   }
   if (roomDrag){
@@ -2481,7 +2540,7 @@ function onMove(e){
     r.y = Math.round((m.y - roomDrag.dy) / 10) * 10;
     roomDrag.moved = true;
     if (e.cancelable) e.preventDefault();
-    renderScene();
+    queueMove(renderScene);
     return;
   }
   if (drag){
@@ -2493,9 +2552,8 @@ function onMove(e){
     drag.toTray = hitDrawer(pt.x, pt.y);
     if (!drag.toTray){ it.room = curRoom; place(it, m.x - drag.dx, m.y - drag.dy, e.altKey); }
     drag.moved = true;
-    if (e.cancelable) e.preventDefault();
     drawer.classList.toggle("hot", drag.toTray);
-    renderScene(); renderSelBox();
+    queueMove(dragFrame);             // p40 — 그리기는 한 프레임에 한 번
     return;
   }
   if (pan){
@@ -2524,9 +2582,10 @@ function onUp(e){
     if (touchList(e || {}).length < 2){ pinch = null; unbindMove(); }
     return;
   }
+  const pend = dropMove();            // p40 — 밀린 그리기는 버리고 아래에서 한 번에
   drawer.classList.remove("hot");
 
-  if (tapeDrag){ tapeDrag = null; unbindMove(); return; }
+  if (tapeDrag){ tapeDrag = null; unbindMove(); if (pend) renderScene(); return; }
 
   if (traceRect){
     const t = traceRect; traceRect = null;
@@ -3010,7 +3069,8 @@ function walkNow(){
     const list = inRoom();
     _wcache = { key,
       bare: walkMin(list.map(rectOf), list),
-      used: walkMin(inflatedRects(), list) };
+      used: walkMin(inflatedRects(), list),
+      rb: list.map(rectOf), ru: inflatedRects() };   /* p40 — 그때의 가구 사각형. 끄는 동안 옛 원을 그대로 그릴 때 쓴다 */
   }
   return _wcache;
 }
@@ -3164,7 +3224,20 @@ function placeLabels(){
    가구가 하나도 없으면 아무것도 그리지 않는다 — 사이가 없으면 통로도 없다. */
 function drawWalkway(){
   if (!inRoom().length) return;
-  const { bare, used } = walkNow();
+  /* p40 — P2-5. 가구를 끄는 동안(drag.moved)에는 통로를 다시 재지 않는다 — 격자 계산이 끌기 한 프레임의 대부분이었다.
+     직전 결과(그때의 가구 사각형 rb/ru 까지)를 흐리게(.walkstale) 그대로 두고, 손을 떼면 onUp → refreshAll 에서 한 번 잰다. */
+  const stale = !!(drag && drag.moved && _wcache.key && _wcache.bare);
+  const W = stale ? _wcache : walkNow();
+  const n0 = svg.childNodes.length, l0 = pendingLabels.length;
+  drawWalkBody(W);
+  if (!stale) return;
+  const kids = svg.childNodes;
+  for (let i = n0; i < kids.length; i++){ kids[i].setAttribute("opacity", ".3"); kids[i].classList.add("walkstale"); }
+  for (let i = l0; i < pendingLabels.length; i++)
+    pendingLabels[i].attr = Object.assign({}, pendingLabels[i].attr, { opacity:".35", class:"walkstale" });
+}
+function drawWalkBody(W){
+  const { bare, used } = W;
   if (!bare) return;
   /* p37 — 문 앞이 막혔으면 그 띠를, 문에서 못 가는 가구가 있으면 그 가구를 빨갛게. 이땐 통로 원은 그리지 않는다 */
   for (const bd of (bare.blocked || [])) drawDoorBlock(bd);
@@ -3175,13 +3248,13 @@ function drawWalkway(){
   /* p34 — 폭과 관계없이 «진짜 통로(양쪽이 막힌 자리)» 가 있으면 늘 그린다(p33 의 «900 미만만» 은 되돌림).
      글자는 처음 방식 «최소 통로 753 · 쾌적» 으로, 원 위쪽을 먼저. who 가 없으면(잴 통로가 없는 배치) 안 그린다. */
   if (bare.who)
-    walkMark(bare, col, 96, `최소 통로 ${fmt(Math.round(bare.w))} · ${walkGrade(bare.w)}`, true, 1, inRoom().map(rectOf));
+    walkMark(bare, col, 96, `최소 통로 ${fmt(Math.round(bare.w))} · ${walkGrade(bare.w)}`, true, 1, W.rb);
 
   /* 사용 중 통로가 더 좁으면 함께 — 서랍을 연 상태의 폭이다 */
   if (used && used.who && used.w < bare.w - 1){
     const t2 = walkTone(used.w);
     const c2 = t2 === "ok" ? "var(--accent)" : t2 === "warn" ? "var(--lock)" : "var(--bad)";
-    walkMark(used, c2, 80, `사용 중 ${fmt(Math.round(used.w))}`, false, 2, inflatedRects());
+    walkMark(used, c2, 80, `사용 중 ${fmt(Math.round(used.w))}`, false, 2, W.ru);
   }
 }
 function drawDoorBlock(bd){
@@ -4595,10 +4668,10 @@ function renderSelBox(){
     `<dt title="가로 × 깊이 × 높이">크기</dt><dd>${fmt(sp.w)} × ${fmt(sp.d)} × ${fmt(sp.h)}</dd>` +
     `<dt>회전</dt><dd>${it.rot}°</dd>` +
     `<dt>바닥 차지</dt><dd>${fmt(f.w)} × ${fmt(f.d)}</dd>` +
-    `<dt>왼쪽 벽</dt><dd>${fmt(it.x)} ${u}</dd>` +
-    `<dt>오른쪽 벽</dt><dd>${fmt(r.w-it.x-f.w)} ${u}</dd>` +
-    `<dt>위쪽 벽</dt><dd>${fmt(it.y)} ${u}</dd>` +
-    `<dt>아래쪽 벽</dt><dd>${fmt(r.d-it.y-f.d)} ${u}</dd></dl>` +
+    `<dt>왼쪽 벽</dt><dd data-wall="l">${fmt(it.x)} ${u}</dd>` +
+    `<dt>오른쪽 벽</dt><dd data-wall="r">${fmt(r.w-it.x-f.w)} ${u}</dd>` +
+    `<dt>위쪽 벽</dt><dd data-wall="t">${fmt(it.y)} ${u}</dd>` +
+    `<dt>아래쪽 벽</dt><dd data-wall="b">${fmt(r.d-it.y-f.d)} ${u}</dd></dl>` +
     /* 회전은 기호만으로는 읽히지 않는다 — 글자로 적어 둔다 */
     `<div class="selacts">` +
     `<button class="btn" type="button" id="selRot"${it.locked ? " disabled" : ""}>` +
@@ -4610,6 +4683,24 @@ function renderSelBox(){
     `<button class="btn" type="button" id="selDup">` +
       `<svg class="i" viewBox="0 0 24 24"><use href="#ic-copy"/></svg><span>복제</span></button>` +
     `</div>`;
+}
+/* p40 — 끄는 동안에는 selBox 를 통째로 만들지 않는다(innerHTML 이 페이지 전체 레이아웃을 불렀다). 벽까지 거리 넷만 */
+function selBoxDists(){
+  const it = sel ? ITEM(sel) : null, r = R();
+  if (mode !== "room" || !it || !r || it.room === null) return;
+  const f = foot(it), u = unitLabel();
+  const v = { l:it.x, r:r.w - it.x - f.w, t:it.y, b:r.d - it.y - f.d };
+  for (const dd of $("selBox").querySelectorAll("dd[data-wall]")){
+    const s = `${fmt(v[dd.dataset.wall])} ${u}`;
+    if (dd.textContent !== s) dd.textContent = s;
+  }
+}
+/* 글자 하나만 바꿔도 페이지 전체 레이아웃이 한 번 돈다(느린 폰 6배 감속에서 20ms+) — 끄는 동안은 0.15초에 한 번, 멈추면 마지막 값을 한 번 더 */
+let sbAt = 0, sbTimer = 0;
+function selBoxSoon(){
+  const now = performance.now();
+  if (now - sbAt >= 150){ sbAt = now; selBoxDists(); return; }
+  if (!sbTimer) sbTimer = setTimeout(() => { sbTimer = 0; sbAt = performance.now(); if (drag) selBoxDists(); }, 150 - (now - sbAt));
 }
 /* selBox 는 통째로 다시 그려진다 — 버튼마다 거는 대신 위임한다 */
 $("selBox").addEventListener("click", e => {
