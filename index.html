@@ -674,6 +674,7 @@ ol.todo li:first-child{color:var(--ink-2);font-weight:500}
 /* 줄자 */
 .tape-body{cursor:move}
 .tape-h{cursor:grab}
+.tape-x{cursor:pointer}
 .tape-h:hover circle{stroke-width:14}
 .tape text{pointer-events:none;-webkit-user-select:none;user-select:none}
 
@@ -1558,7 +1559,7 @@ const ROOM_PRESETS = [
 ];
 
 /* 화면에 찍히는 판 번호. 실기에서 «고쳤는데 그대로다» 를 가르는 유일한 단서다. */
-const BUILD = "2026-09-28 · p40";
+const BUILD = "2026-09-28 · p41";
 
 const KEYOPT = "room-planner/opt";
 let opt = { score:true, walk:true, unit:"mm", guide:0 };
@@ -1992,6 +1993,31 @@ function newTape(){
   tape = { ax:Math.round(cx - L/2), ay:y, bx:Math.round(cx + L/2), by:y };
 }
 function tapeLen(){ return Math.hypot(tape.bx-tape.ax, tape.by-tape.ay); }
+/* p41 — 줄자 치우기 한 곳. 도구 버튼·줄자 위 ×·방에서 나가기(goHome) 모두 여기로 */
+function tapeOff(){
+  tape = null; tapeDrag = null;
+  const b = document.getElementById("tapeBtn");
+  if (b){ b.classList.remove("armed"); const lb = b.querySelector("span"); if (lb) lb.textContent = "줄자"; }
+}
+/* p41 — 무엇을 잡았는지 «모양» 으로 정한다(예전엔 눌린 요소로 정해서 두 가지가 불편했다).
+   ① 줄 위를 정확히 눌러야만 옮겨졌다 — 이제 줄 양옆 26px 띠와 빨간 길이 글자 칸도 «옮기기».
+   ② 줄자를 짧게 하면 양 끝 손잡이(지름 60px)가 줄 전체를 덮어 옮기려 해도 늘어나기만 했다
+      — 이제 끝 판정 반경을 화면 길이의 22%(8~24px)로 줄이고, 두 끝 중 가까운 쪽만. 나머지 가운데는 옮기기.
+   판정 순서: × → 끝(a/b) → 글자 칸 → 줄 띠. 단위는 화면 px(pxMm 로 환산). */
+function tapeHit(m){
+  if (!tape) return null;
+  const k = pxMm(1), len = tapeLen();
+  if (tape.xb && Math.hypot(m.x - tape.xb.x, m.y - tape.xb.y) <= tape.xb.r + 8 * k) return "x";
+  const dA = Math.hypot(m.x - tape.ax, m.y - tape.ay) / k, dB = Math.hypot(m.x - tape.bx, m.y - tape.by) / k;
+  const zone = Math.max(8, Math.min(24, len / k * 0.22));
+  if (Math.min(dA, dB) <= zone) return dA <= dB ? "a" : "b";
+  const L = tape.lab, s = 6 * k;
+  if (L && m.x >= L.x0 - s && m.x <= L.x1 + s && m.y >= L.y0 - s && m.y <= L.y1 + s) return "move";
+  const dx = tape.bx - tape.ax, dy = tape.by - tape.ay;
+  const t = len ? Math.max(0, Math.min(1, ((m.x - tape.ax) * dx + (m.y - tape.ay) * dy) / (len * len))) : 0;
+  const d = Math.hypot(m.x - (tape.ax + dx * t), m.y - (tape.ay + dy * t)) / k;
+  return d <= 26 ? "move" : null;
+}
 
 /* 화면 픽셀 → mm. 줄자의 손잡이·글자를 확대율과 무관하게 일정한 크기로 유지한다. */
 function pxMm(px){
@@ -2054,7 +2080,16 @@ function drawTape(){
   const label = `${fmt(Math.round(len))} ${unitLabel()}` + (axis ? (axis === "h" ? "  ⟷ 수평" : "  ⟷ 수직") : "");
   const pad = fs*0.45, tw = label.length * fs*0.60;
   g.appendChild(el("rect", { x:lx - tw/2 - pad, y:ly - fs*0.82 - pad*0.5,
-    width:tw + pad*2, height:fs*1.2 + pad, rx:fs*0.36, fill:col, opacity:.96 }));
+    width:tw + pad*2, height:fs*1.2 + pad, rx:fs*0.36, fill:col, opacity:.96, class:"tape-body" }));
+  tape.lab = { x0:lx - tw/2 - pad, y0:ly - fs*0.82 - pad*0.5, x1:lx + tw/2 + pad, y1:ly - fs*0.82 + pad*0.5 + fs*1.2 };   /* p41 — 글자 칸도 잡으면 옮기기 */
+  /* p41 — 글자 칸 오른쪽 «×». 누르면 줄자를 치운다(도구 버튼까지 안 가도 된다) */
+  const xr = pxMm(11), xcx = lx + tw/2 + pad + pxMm(7) + xr, xcy = ly - fs*0.22, xk = xr * 0.42;
+  const xg = el("g", { class:"tape-x", role:"button", "aria-label":"줄자 치우기" });
+  xg.appendChild(el("circle", { cx:xcx, cy:xcy, r:xr, fill:"var(--surface)", stroke:col, "stroke-width":lw }));
+  xg.appendChild(el("path", { d:`M ${xcx - xk} ${xcy - xk} L ${xcx + xk} ${xcy + xk} M ${xcx + xk} ${xcy - xk} L ${xcx - xk} ${xcy + xk}`,
+    stroke:col, "stroke-width":lw * 1.2, "stroke-linecap":"round" }));
+  g.appendChild(xg);
+  tape.xb = { x:xcx, y:xcy, r:xr };
   g.appendChild(txt({ x:lx, y:ly + fs*0.3, "text-anchor":"middle", "font-size":fs,
     "font-weight":600, "font-family":"IBM Plex Mono,monospace", fill:"#FFFFFF" }, label));
 
@@ -2418,13 +2453,14 @@ function onDown(e){
   const pt = evPoint(e);
   const m = toMm(pt.x, pt.y);
 
-  if (tape && e.target && e.target.closest){
-    const h = e.target.closest(".tape-h");
-    if (h){
-      tapeDrag = { end:h.getAttribute("data-end") };
+  if (tape){
+    const th = tapeHit(m);                    /* p41 — 눌린 요소 말고 모양으로 판정 */
+    if (th === "x"){ tapeOff(); renderScene(); if (e.cancelable) e.preventDefault(); return; }
+    if (th === "a" || th === "b"){
+      tapeDrag = { end:th };
       bindMove(); if (e.cancelable) e.preventDefault(); return;
     }
-    if (e.target.closest(".tape-body")){
+    if (th === "move"){
       tapeDrag = { end:"move", mx:m.x, my:m.y, o:Object.assign({}, tape) };
       bindMove(); if (e.cancelable) e.preventDefault(); return;
     }
@@ -3915,6 +3951,7 @@ const unitLabel = () => unit === "cm" ? "cm" : "mm";
 function select(uid){ flushNudge(); sel = uid; closeSheets(); refreshAll(); }
 
 function goHome(){
+  tapeOff();                    /* p41 — 방에서 나가면 줄자도 치운다 */
   mode = "home"; curRoom = null; sel = null; setTool(null);
   $("homeTools").style.display = "flex";
   $("roomTools").style.display = "none";
@@ -5446,12 +5483,11 @@ $("scoreBtn").addEventListener("click", () => {
 $("tapeBtn").addEventListener("click", () => {
   const b = $("tapeBtn"), lb = b.querySelector("span");
   if (tape){
-    tape = null; tapeDrag = null;
-    lb.textContent = "줄자"; b.classList.remove("armed");
+    tapeOff();
   } else {
     newTape();
     lb.textContent = "줄자 치우기"; b.classList.add("armed");
-    toast("양 끝을 끌어 맞추세요 · 수평·수직에 가까우면 딱 맞습니다");
+    toast("양 끝을 끌어 맞추세요 · 가운데를 잡으면 옮겨지고 × 로 치웁니다", 3600);
   }
   renderScene();
 });
