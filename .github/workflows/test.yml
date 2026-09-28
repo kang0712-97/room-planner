@@ -1,0 +1,38 @@
+# 이걸 어디다 두지? — 회귀 시험. push 할 때마다(또는 Actions 탭에서 손으로) 돈다.
+# 실패하면 GitHub 가 저장소 주인에게 메일을 보낸다. 배포는 지금처럼 손으로 하되 초록불을 본 뒤에.
+name: test
+on:
+  push:
+  workflow_dispatch:
+jobs:
+  chromium:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 20 }
+      - name: 글꼴 — 시험 기대값을 만든 환경과 같게(구글 글꼴은 막는다)
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq fonts-noto-cjk fonts-noto-color-emoji fonts-dejavu fonts-liberation
+          echo "0.0.0.0 fonts.googleapis.com fonts.gstatic.com" | sudo tee -a /etc/hosts
+      - run: npm i --no-save --no-package-lock playwright@1.56.0
+      - run: npx playwright install --with-deps chromium
+      - run: python3 -m pip install -q pillow
+      - run: node tests/ci.js chromium
+  webkit:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 20 }
+      - run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq fonts-noto-cjk fonts-noto-color-emoji
+          echo "0.0.0.0 fonts.googleapis.com fonts.gstatic.com" | sudo tee -a /etc/hosts
+      - run: npm i --no-save --no-package-lock playwright@1.56.0
+      - run: npx playwright install --with-deps webkit
+      - run: python3 -m pip install -q pillow
+      - run: node tests/ci.js webkit

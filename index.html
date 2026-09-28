@@ -1559,7 +1559,7 @@ const ROOM_PRESETS = [
 ];
 
 /* 화면에 찍히는 판 번호. 실기에서 «고쳤는데 그대로다» 를 가르는 유일한 단서다. */
-const BUILD = "2026-09-28 · p41";
+const BUILD = "2026-09-28 · p42";
 
 const KEYOPT = "room-planner/opt";
 let opt = { score:true, walk:true, unit:"mm", guide:0 };
@@ -3962,9 +3962,9 @@ function goHome(){
   $("layBtn").disabled = true;
   $("crumbSep").hidden = true; $("crumbRoom").hidden = true;
   fitView(); renderScene(); refreshAll();
-  /* 폰에서는 좌우 패널이 시트라, 집 화면에 오면 방 목록이 화면 밖에 숨는다.
-     집 화면에서 할 일은 «방 고르기» 뿐이므로 그 시트를 열어 둔다. */
-  if (isPhone()) openSheet("list");
+  /* p42 — 예전엔 폰에서 집 화면에 오면 방 목록 시트를 저절로 열었다. 사용자 요청으로 뺐다:
+     집 도면을 먼저 보여 주고, 방은 도면에서 눌러 들어가거나 «목록» 탭으로. 떠 있던 시트(도구 등)는 닫는다. */
+  if (isPhone()) closeSheets();
 }
 function enterRoom(rid){
   if (!ROOMOF(rid)) return;

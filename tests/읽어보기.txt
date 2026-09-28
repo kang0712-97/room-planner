@@ -1,0 +1,17 @@
+이걸 어디다 두지? — 회귀 시험 (p42 부터 GitHub Actions 에서도 자동으로 돈다)
+
+한꺼번에:  node tests/ci.js chromium      (저장소 루트에서. index.html 을 시험한다)
+          node tests/ci.js webkit        (아이폰 사파리 대용 — t19·t21·t23 만. t22·t40 은 크롬 전용 CDP 를 쓴다)
+          node tests/ci.js chromium --update   ← 화면을 일부러 바꿨을 때만. 기대 출력(expected/*.txt)을 새로 쓴다
+하나만:    TESTS=t40,t41 node tests/ci.js chromium
+다른 파일: SRC_HTML=/경로/내방배치판.html node tests/ci.js chromium
+
+실패 조건: 종료 코드 ≠ 0 · 출력에 ✗/❌ · 정리한 출력이 expected/<시험>.txt 와 다름.
+정리 = ms·판 번호·날짜·힙 크기·네트워크 콘솔 오류·(t23 창 높이·tux 버튼 폭) 을 지움. 점수·통로·px·좌표는 그대로 비교된다.
+t31 의 photo.jpg 는 mkphoto.py 가 씨앗을 고정해 만든다(pip install pillow).
+
+컨테이너에서 하나씩: 내방배치판.html 을 작업판에 app.html·app22.html 로 복사하고 node t16.js … (경로는 APP/APP22/WORK 환경 변수로 바꿀 수 있다)
+
+⚠️ t22.js 는 «흔들리는 손가락» 테스트다. Playwright 의 click() 과 touchscreen.tap() 은
+   down 과 up 사이에 move 가 없어서 진짜 손가락을 흉내내지 못한다.
+   폰 관련 버그를 고쳤다면 반드시 t22 를 먼저 돌린다.
