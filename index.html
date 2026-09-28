@@ -254,6 +254,12 @@ kbd{font-family:"IBM Plex Mono",monospace;font-size:10.5px;border:1px solid var(
   background:var(--bad-soft);color:var(--bad);border:1px solid var(--bad);border-radius:8px;
   padding:8px 10px 8px 14px;font-size:13px;line-height:1.45;box-shadow:0 10px 30px -16px rgba(0,0,0,.45)}
 .savewarn .btn{flex:none}
+/* p43 — 안내 띠. 툴바를 가리지 않게 도면 위쪽에, 인트로(z60)보다 위(z61) — 처음 여는 순간 봐야 한다 */
+.notebar{position:fixed;left:50%;top:64px;transform:translateX(-50%);z-index:61;
+  display:flex;gap:8px;align-items:center;width:max-content;max-width:min(600px,94vw);box-sizing:border-box;
+  background:var(--surface);color:var(--ink);border:1px solid var(--line-strong);border-left:4px solid var(--accent);border-radius:8px;
+  padding:8px 8px 8px 12px;font-size:13px;line-height:1.45;box-shadow:0 10px 30px -14px rgba(0,0,0,.45)}
+.notebar .btn{flex:none;text-decoration:none}
 .bkacts{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .bkacts .btn{justify-content:center;height:40px}
 .shurl{width:100%;height:40px;margin:4px 0 2px;padding:0 10px;box-sizing:border-box;
@@ -797,6 +803,8 @@ ol.todo li:first-child{color:var(--ink-2);font-weight:500}
   .bar .addset{display:none}
   /* p38 — 폰 «상태» 의 고른 가구 칸 버튼은 아래 줄 «수정» 과 겹친다. 폰에서는 뺀다 */
   #selBox .selacts{display:none}
+  .notebar{top:52px;flex-wrap:wrap;justify-content:flex-end}
+  .notebar #nbText{flex:1 1 100%}
   .bar .util{display:flex !important;flex-wrap:wrap;gap:8px}
   .bar .sep{display:none}
   .bar .btn{height:36px}
@@ -928,6 +936,12 @@ ol.todo li:first-child{color:var(--ink-2);font-weight:500}
 <div class="savewarn" id="saveWarn" role="alert" hidden>
   <span>자동저장이 안 되고 있어요. 지금 배치를 잃지 않으려면 파일로 백업해 두세요.</span>
   <button type="button" class="btn" id="swBackup">백업 파일 저장</button>
+</div>
+<!-- p43 — 방을 잃지 않게 한 줄 안내(인앱 브라우저 · 백업 권유). 한 번에 하나만. 경고 띠(#saveWarn)보다 아래 -->
+<div class="notebar" id="noteBar" role="status" hidden>
+  <span id="nbText"></span>
+  <a class="btn go" id="nbGo" href="#" rel="noopener"></a>
+  <button type="button" class="btn quiet" id="nbNo">닫기</button>
 </div>
 
   <div class="bar">
@@ -1559,7 +1573,7 @@ const ROOM_PRESETS = [
 ];
 
 /* 화면에 찍히는 판 번호. 실기에서 «고쳤는데 그대로다» 를 가르는 유일한 단서다. */
-const BUILD = "2026-09-28 · p42";
+const BUILD = "2026-09-28 · p43";
 
 const KEYOPT = "room-planner/opt";
 let opt = { score:true, walk:true, unit:"mm", guide:0 };
@@ -1622,7 +1636,7 @@ function commit(prev){
   undoStack.push(prev);
   if (undoStack.length > 120) undoStack.shift();
   redoStack.length = 0;
-  persist(); refreshAll();
+  persist(); refreshAll(); bkTick();      /* p43 — 백업 권유 셈 */
 }
 function undo(){ flushNudge(); if (!undoStack.length) return;
   redoStack.push(snapshot()); applySnap(undoStack.pop()); toast("되돌렸습니다"); }
@@ -5892,6 +5906,7 @@ function saveBackup(){
   a.download = name; document.body.appendChild(a); a.click(); a.remove();
   setTimeout(() => URL.revokeObjectURL(a.href), 4000);
   toast("백업 파일을 저장했습니다");
+  bkDone();                               /* p43 — 백업 권유 셈을 0 으로 */
 }
 $("bkBtn").addEventListener("click", openBackup);
 $("bkClose").addEventListener("click", () => $("bkModal").classList.remove("open"));
@@ -6068,6 +6083,65 @@ function takeShareHash(){
 }
 window.addEventListener("hashchange", () => { if (isShareHash(location.hash)) receiveShared(takeShareHash()); });
 
+/* ============ p43 — 방을 잃지 않게 ============
+   방은 «이 기기의 이 브라우저» 저장소에만 있다. 가장 흔하게 잃는 길 두 가지를 미리 막는다.
+   ① 카톡·인스타 같은 앱 안의 브라우저(인앱)는 크롬과 저장소가 따로다 — 거기서 만든 방은 크롬에서 안 보이고,
+      앱이 저장소를 비우면 사라진다. 인앱이면 처음부터 «크롬(사파리)으로 열기» 띠.
+      카톡은 kakaotalk://web/openExternal 로 바깥 브라우저를 연다(안드로이드·아이폰 둘 다). 안드로이드의 다른 앱은 크롬 intent.
+      아이폰의 다른 앱은 앱에서 밖으로 여는 길이 없어 «⋯ 메뉴 → 다른 브라우저로 열기» 안내만.
+      주소는 부팅 때 것(BOOT_URL) — 공유 링크의 #r=… 는 곧 지워지기 때문.
+   ② 백업 권유: 바꾼 횟수(commit)를 room-planner/bk 에 센다. 20번 넘게 바꾸는 동안 백업을 안 받았으면 띠 하나.
+      «닫기» 는 30번 더 바꿀 때까지 조용히, 백업을 받으면 0 부터. */
+const BOOT_URL = location.href;
+const UA = navigator.userAgent || "";
+const INAPP = /KAKAOTALK/i.test(UA) ? "카톡" : /NAVER\(inapp/.test(UA) ? "네이버 앱" : /Instagram/i.test(UA) ? "인스타그램"
+            : /FBAN|FBAV/.test(UA) ? "페이스북" : /\bLine\//.test(UA) ? "라인" : /DaumApps/i.test(UA) ? "다음 앱" : null;
+const IS_ANDROID = /Android/i.test(UA);
+const KEYBK = "room-planner/bk", BK_FIRST = 20, BK_AGAIN = 30;
+let noteKind = null;
+function showNote(kind, text, goLabel, href, onGo){
+  noteKind = kind;
+  $("nbText").textContent = text;
+  const g = $("nbGo");
+  g.hidden = !goLabel; g.textContent = goLabel || ""; g.setAttribute("href", href || "#"); g.onclick = onGo || null;
+  $("noteBar").hidden = false;
+}
+function hideNote(){ $("noteBar").hidden = true; noteKind = null; }
+function outsideHref(){
+  if (INAPP === "카톡") return "kakaotalk://web/openExternal?url=" + encodeURIComponent(BOOT_URL);
+  if (IS_ANDROID && !/#/.test(BOOT_URL))    /* intent 주소 안에는 # 를 못 넣는다 — 공유 링크면 안내만 */
+    return "intent://" + BOOT_URL.replace(/^https?:\/\//, "") + "#Intent;scheme=https;package=com.android.chrome;end";
+  return null;
+}
+function inappNote(){
+  const br = IS_ANDROID ? "크롬" : "사파리", href = outsideHref();
+  showNote("inapp", `${INAPP} 안에서 열었어요. 여기서 만든 방은 ${INAPP} 안에만 저장돼 ${br}에서는 안 보이고, 앱이 지우면 사라져요. ` +
+    (href ? `${br}으로 열어 쓰세요.` : `오른쪽 위 ⋯ 메뉴 → «다른 브라우저로 열기» 로 여세요.`),
+    href ? `${br}으로 열기` : null, href);
+}
+function bkLoad(){ try { return Object.assign({ n:0, at:0, next:BK_FIRST }, JSON.parse(localStorage.getItem(KEYBK) || "null")); }
+                  catch(e){ return { n:0, at:0, next:BK_FIRST }; } }
+function bkStore(b){ try { localStorage.setItem(KEYBK, JSON.stringify(b)); } catch(e){} }
+function bkNote(){
+  showNote("backup", "방을 꽤 고쳤어요. 방은 이 기기 브라우저에만 저장돼요 — 백업 파일을 한 번 받아 두면 기기를 바꾸거나 기록을 지워도 되살릴 수 있어요.",
+    "백업 파일 저장", "#", e => { e.preventDefault(); saveBackup(); });
+}
+function bkTick(){
+  const b = bkLoad(); b.n++; bkStore(b);
+  if (b.n >= b.next && !noteKind) bkNote();
+}
+function bkDone(){ bkStore({ n:0, at:Date.now(), next:BK_FIRST }); if (noteKind === "backup") hideNote(); }
+$("nbNo").addEventListener("click", () => {
+  if (noteKind === "backup"){ const b = bkLoad(); b.next = b.n + BK_AGAIN; bkStore(b); }
+  if (noteKind === "inapp") try { sessionStorage.setItem("room-planner/inapp-ok", "1"); } catch(e){}
+  hideNote();
+});
+function bootNotes(){
+  let ok = false; try { ok = sessionStorage.getItem("room-planner/inapp-ok") === "1"; } catch(e){}
+  if (INAPP && !ok) return inappNote();
+  const b = bkLoad(); if (b.n >= b.next) bkNote();
+}
+
 
 /* ============ 사용 가이드 ============
    화면을 실제로 찍은 그림이다. 앱이 바뀌면 같이 낡는다.
@@ -6132,6 +6206,7 @@ goHome();
 /* p35 — 링크로 받은 배치가 있으면 인트로 대신 «새 방으로 추가할까요?» 부터 묻는다 */
 if (isShareHash(location.hash)) receiveShared(takeShareHash());
 else showIntro(opt.guide ? null : openGuide);
+bootNotes();                 /* p43 — 인앱 브라우저 안내 · 백업 권유 */
 /* 자동저장이 막혀 있으면 persist() 가 이미 경고 띠를 띄웠다 */
 /* 브라우저에 «이 사이트 저장소는 자동으로 지우지 말아 달라» 고 요청한다 (거절돼도 그만) */
 try { if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {}); } catch(e){}
