@@ -14,11 +14,14 @@ for (const n of ['app.html', 'app22.html']) fs.copyFileSync(SRC, path.join(WORK,
 const GD = path.join(path.dirname(SRC), 'guide');
 if (fs.existsSync(GD)) { fs.mkdirSync(path.join(WORK, 'guide'), { recursive: true });
   for (const f of fs.readdirSync(GD)) fs.copyFileSync(path.join(GD, f), path.join(WORK, 'guide', f)); }
+/* p45 — 홈 화면 앱(PWA) 파일도 옆에 */
+for (const f of ['sw.js', 'manifest.json', 'icon-180.png', 'icon-192.png', 'icon-512.png', 'icon-512-maskable.png']) {
+  const s = path.join(path.dirname(SRC), f); if (fs.existsSync(s)) fs.copyFileSync(s, path.join(WORK, f)); }
 if (!fs.existsSync(path.join(WORK, 'photo.jpg'))) {
   const r = spawnSync('python3', [path.join(T, 'mkphoto.py'), path.join(WORK, 'photo.jpg')], { stdio: 'inherit' });
   if (r.status) { console.error('photo.jpg 를 못 만들었다(pip install pillow)'); process.exit(1); }
 }
-const ALL = ['t16','t16b','t16c','t17','t18','tux','tguide','t19','t19b','t21','t22','t23','t31','t32','t34','t34b','t35','t36','t37','t38','t39','t40','t41','t42','t43','t44'];
+const ALL = ['t16','t16b','t16c','t17','t18','tux','tguide','t19','t19b','t21','t22','t23','t31','t32','t34','t34b','t35','t36','t37','t38','t39','t40','t41','t42','t43','t44','t45'];
 const WEBKIT = ['t19', 't21', 't23'];          // t22·t40 은 CDP(크롬 전용)를 쓴다
 const LIST = (process.env.TESTS ? process.env.TESTS.split(',') : (BR === 'webkit' ? WEBKIT : ALL));
 

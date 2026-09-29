@@ -16,6 +16,11 @@
 <meta name="twitter:card" content="summary_large_image">
 <link rel="icon" type="image/png" href="icon-180.png">
 <link rel="apple-touch-icon" href="icon-180.png">
+<link rel="manifest" href="manifest.json">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="어디다 두지">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
 <title>이걸 어디다 두지?</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -260,6 +265,8 @@ kbd{font-family:"IBM Plex Mono",monospace;font-size:10.5px;border:1px solid var(
   background:var(--surface);color:var(--ink);border:1px solid var(--line-strong);border-left:4px solid var(--accent);border-radius:8px;
   padding:8px 8px 8px 12px;font-size:13px;line-height:1.45;box-shadow:0 10px 30px -14px rgba(0,0,0,.45)}
 .notebar .btn{flex:none;text-decoration:none}
+/* p45 — «홈 화면에 추가» 는 폰에서만(데스크톱 툴바 한 줄을 지킨다) */
+@media(min-width:701px){#installBtn{display:none !important}}
 .bkacts{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .bkacts .btn{justify-content:center;height:40px}
 .shurl{width:100%;height:40px;margin:4px 0 2px;padding:0 10px;box-sizing:border-box;
@@ -991,6 +998,8 @@ ol.todo li:first-child{color:var(--ink-2);font-weight:500}
       <button class="btn quiet" id="bkBtn" title="배치를 파일로 백업하거나 불러오기" aria-label="백업"><svg class="i" viewBox="0 0 24 24"><use href="#ic-save"/></svg><span>백업</span></button>
       <button class="btn quiet" id="helpBtn" title="사용법" aria-label="사용법"><svg class="i" viewBox="0 0 24 24"><use href="#ic-help"/></svg><span>사용법</span></button>
       <button class="btn quiet" id="shareBtn" title="이 방 배치를 링크로 보내기" aria-label="링크 공유"><svg class="i" viewBox="0 0 24 24"><use href="#ic-link"/></svg><span>공유</span></button>
+      <!-- p45 — 홈 화면에 앱으로 추가(폰에서만, 설치할 수 있을 때만 보인다) -->
+      <button class="btn quiet" id="installBtn" title="홈 화면에 앱으로 추가" aria-label="홈 화면에 추가" hidden><svg class="i" viewBox="0 0 24 24"><use href="#ic-home"/></svg><span>홈 화면에 추가</span></button>
       <button class="btn" id="imgBtn2" title="배치를 이미지로 저장" aria-label="이미지 저장"><svg class="i" viewBox="0 0 24 24"><use href="#ic-image"/></svg><span>이미지 저장</span></button>
       <button class="btn quiet danger" id="resetBtn" title="전부 지우고 처음 상태로" aria-label="처음으로"><svg class="i" viewBox="0 0 24 24"><use href="#ic-reset"/></svg><span>처음으로</span></button>
     </span>
@@ -1573,7 +1582,7 @@ const ROOM_PRESETS = [
 ];
 
 /* 화면에 찍히는 판 번호. 실기에서 «고쳤는데 그대로다» 를 가르는 유일한 단서다. */
-const BUILD = "2026-09-28 · p44";
+const BUILD = "2026-09-28 · p45";
 
 const KEYOPT = "room-planner/opt";
 let opt = { score:true, walk:true, unit:"mm", guide:0 };
@@ -6139,6 +6148,35 @@ $("nbNo").addEventListener("click", () => {
   if (noteKind === "inapp") try { sessionStorage.setItem("room-planner/inapp-ok", "1"); } catch(e){}
   hideNote();
 });
+/* ============ p45 — 홈 화면 앱(PWA) ============
+   서비스 워커(sw.js)는 https 에서만 등록한다(file:// 시험에서는 조용히 건너뜀).
+   «홈 화면에 추가» 단추: 안드로이드 크롬은 beforeinstallprompt 를 받아 두었다가 단추로 띄운다.
+   아이폰 사파리는 그런 신호가 없어 «공유 → 홈 화면에 추가» 안내만. 앱으로 연 상태(standalone)·인앱 브라우저에서는 숨긴다. */
+const STANDALONE = (window.matchMedia && matchMedia("(display-mode: standalone)").matches) || navigator.standalone === true;
+const IS_IOS = /iPhone|iPad|iPod/.test(UA);
+let installEvt = null;
+function registerSW(){
+  if (!("serviceWorker" in navigator) || location.protocol !== "https:" && location.hostname !== "localhost" && location.hostname !== "127.0.0.1") return;
+  navigator.serviceWorker.register("sw.js").catch(() => {});
+}
+window.addEventListener("beforeinstallprompt", e => {
+  e.preventDefault(); installEvt = e;
+  if (!STANDALONE && !INAPP) $("installBtn").hidden = false;
+});
+window.addEventListener("appinstalled", () => { installEvt = null; $("installBtn").hidden = true; toast("홈 화면에 추가했어요 — 이제 앱처럼 열 수 있어요", 3600); });
+if (!STANDALONE && !INAPP && IS_IOS) $("installBtn").hidden = false;
+$("installBtn").addEventListener("click", () => {
+  closeSheets();
+  if (installEvt){
+    const e = installEvt; installEvt = null;
+    e.prompt();
+    Promise.resolve(e.userChoice).then(r => { if (r && r.outcome === "accepted") $("installBtn").hidden = true; }).catch(() => {});
+    return;
+  }
+  if (IS_IOS) toast("사파리 아래쪽 공유 단추(□↑) → «홈 화면에 추가» 를 누르세요", 6000);
+  else toast("브라우저 메뉴(⋮) → «앱 설치» 또는 «홈 화면에 추가» 를 누르세요", 6000);
+});
+
 function bootNotes(){
   let ok = false; try { ok = sessionStorage.getItem("room-planner/inapp-ok") === "1"; } catch(e){}
   if (INAPP && !ok) return inappNote();
@@ -6210,6 +6248,7 @@ goHome();
 if (isShareHash(location.hash)) receiveShared(takeShareHash());
 else showIntro(opt.guide ? null : openGuide);
 bootNotes();                 /* p43 — 인앱 브라우저 안내 · 백업 권유 */
+registerSW();                /* p45 — 홈 화면 앱·오프라인 */
 /* 자동저장이 막혀 있으면 persist() 가 이미 경고 띠를 띄웠다 */
 /* 브라우저에 «이 사이트 저장소는 자동으로 지우지 말아 달라» 고 요청한다 (거절돼도 그만) */
 try { if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {}); } catch(e){}
