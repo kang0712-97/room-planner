@@ -734,6 +734,7 @@ ol.todo li:first-child{color:var(--ink-2);font-weight:500}
 .gshot img{max-width:100%;width:auto;height:auto;max-height:min(42vh,420px);
   object-fit:contain;border-radius:3px;box-shadow:0 6px 18px -10px rgba(0,0,0,.45)}
 .gdesc{margin:0;font-size:13px;line-height:1.7;color:var(--ink-2);min-height:3.4em}
+.gnote{margin:0;font-size:11px;line-height:1.5;color:var(--muted);text-align:center}
 .gdots{display:flex;gap:6px;justify-content:center}
 .gdots button{width:7px;height:7px;padding:0;border-radius:50%;border:0;
   background:var(--line-strong);opacity:.3;cursor:pointer}
@@ -870,7 +871,7 @@ ol.todo li:first-child{color:var(--ink-2);font-weight:500}
 
 .selbar{
   position:fixed;left:0;right:0;bottom:var(--tabh);z-index:42;
-  align-items:center;gap:6px;padding:6px 10px;
+  align-items:center;gap:5px;padding:6px 8px;
   background:var(--surface);border-top:1px solid var(--line)
 }
 /* 이름·규격을 누르면 «상태» 시트가 열린다 — 자세한 값은 거기 다 있다.
@@ -1227,6 +1228,9 @@ ol.todo li:first-child{color:var(--ink-2);font-weight:500}
   <button type="button" class="sb-act" data-sb="edit" aria-label="이름·치수 수정"><svg class="i" viewBox="0 0 24 24"><use href="#ic-edit"/></svg><span>수정</span></button>
   <button type="button" class="sb-act" data-sb="dup" aria-label="복제"><svg class="i" viewBox="0 0 24 24"><use href="#ic-copy"/></svg><span>복제</span></button>
   <button type="button" class="sb-act" data-sb="spot" aria-label="더 나은 자리 찾기"><svg class="i" viewBox="0 0 24 24"><use href="#ic-score"/></svg><span>자리 찾기</span></button>
+  <!-- p46 — 사용자 요청: 고른 가구 줄에서 바로 보관·삭제(p37 에 수정 창 안으로 옮겼던 것을 되살림) -->
+  <button type="button" class="sb-act" data-sb="store" aria-label="보관함에 넣기"><svg class="i" viewBox="0 0 24 24"><use href="#ic-box"/></svg><span id="sbStoreL">보관</span></button>
+  <button type="button" class="sb-act danger" data-sb="del" aria-label="삭제"><svg class="i" viewBox="0 0 24 24"><use href="#ic-trash"/></svg><span>삭제</span></button>
 </div>
 
 <!-- 이미지로 저장 — 폰에서는 «내려받기» 가 잘 안 먹어서 그림을 띄우고 길게 누르게 한다 -->
@@ -1255,6 +1259,8 @@ ol.todo li:first-child{color:var(--ink-2);font-weight:500}
     <div class="gshot"><img id="gImg" alt=""></div>
     <p class="gdesc" id="gDesc"></p>
     <div class="gdots" id="gDots"></div>
+    <!-- p46 — 사용 측정 안내(계획서 P3-1: «사용법 창에 한 줄») -->
+    <p class="gnote">방문 수와 몇 가지 사용 횟수만 셉니다 — 쿠키를 쓰지 않고, 방·배치 내용은 보내지 않아요.</p>
     <div class="acts">
       <button class="btn" id="gPrev">이전</button>
       <button class="btn go" id="gNext">다음</button>
@@ -1582,7 +1588,7 @@ const ROOM_PRESETS = [
 ];
 
 /* 화면에 찍히는 판 번호. 실기에서 «고쳤는데 그대로다» 를 가르는 유일한 단서다. */
-const BUILD = "2026-09-28 · p45";
+const BUILD = "2026-09-30 · p46";
 
 const KEYOPT = "room-planner/opt";
 let opt = { score:true, walk:true, unit:"mm", guide:0 };
@@ -4935,6 +4941,7 @@ $("rmSave").addEventListener("click", () => {
     toast(`${name} 수정`);
   } else {
     const id = newRid();
+    track("방 만들기");                   /* p46 */
     let x = roomEditRect ? roomEditRect.x : 0, y = roomEditRect ? roomEditRect.y : 0;
     if (!roomEditRect){
       for (const r of state.rooms) x = Math.max(x, r.x + r.w + 600);
@@ -5424,6 +5431,7 @@ $("afAdd").addEventListener("click", () => {
   const fw = rot ? Math.round(d) : Math.round(w), fd = rot ? Math.round(w) : Math.round(d);
   const at = into ? freeSpot({ w:fw, d:fd }) : { x:0, y:0 };
   state.items.push({ uid, cat:cid, room:into, x:at.x, y:at.y, rot, locked:false });
+  track("가구 추가");                     /* p46 */
   for (const f of ["afName","afW","afD","afH","afF"]) $(f).value = "";
   $("afFix").checked = false; afPick = null;
   addModal.classList.remove("open");
@@ -5667,6 +5675,7 @@ function startNewRoom(){
     return toast("가로·세로를 500~30000 mm 로 적어 주세요");
   const before = snapshot();
   const id = newRid();
+  track("방 만들기");                     /* p46 — 첫 화면 가로·세로 */
   let x = 0;
   for (const r of state.rooms) x = Math.max(x, r.x + r.w + 600);
   /* p34 — 샘플 방과 같은 «내 방» 이 목록에 둘 생기던 것. 프리셋 크기면 그 이름, 아니면 «새 방», 겹치면 번호 */
@@ -5749,6 +5758,8 @@ $("selbar").addEventListener("click", e => {
   if (a === "edit")      openEditItem(sel);
   else if (a === "dup")  duplicateItem(sel);
   else if (a === "spot") phoneSpot(sel);
+  else if (a === "store"){ const it = ITEM(sel); if (it && it.room === null) takeItem(sel); else storeItem(sel); }   /* p46 */
+  else if (a === "del")  removeItem(sel);
 });
 /* 폰 «자리 찾기» — 상태 시트를 열고 «더 나은 자리» 결과로 내려 준다 */
 function phoneSpot(uid){
@@ -5773,6 +5784,7 @@ function syncPhone(){
       : `${fmt(f.w)} × ${fmt(f.d)} · ${it.rot}°`;
     for (const a of ["dup", "spot"]) $("selbar").querySelector(`[data-sb="${a}"]`).hidden = it.room === null;
     if (sp.fixed) $("selbar").querySelector('[data-sb="spot"]').hidden = true;
+    $("sbStoreL").textContent = it.room === null ? "꺼내기" : "보관";          /* p46 — 보관함 가구는 «꺼내기» */
   }
   /* 집 화면의 «목록» 은 가구가 아니라 방이다. 이름이 다르면 눌러 볼 이유가 생긴다. */
   $("tabAddL").textContent  = mode === "room" ? "추가" : "방 추가";
@@ -5997,6 +6009,7 @@ $("shareBtn").addEventListener("click", async () => {
   if (!url) return toast("링크를 만들지 못했습니다");
   if (url.length > SHARE_MAX_HASH + 200) return toast("배치가 너무 커서 링크로 보낼 수 없어요 — «백업» 파일을 써 주세요", 3200);
   const size = `${fmt(r.w)}×${fmt(r.d)} ${unitLabel()}`;
+  track("링크 보내기");                   /* p46 */
   if (isPhone() && navigator.share){
     try { await navigator.share({ title:`${r.name} 배치 — 이걸 어디다 두지?`,
             text:`«${r.name}» (${size} · 가구 ${n}개) 배치예요. 열면 내 집에 새 방으로 들어가요.`, url }); return; }
@@ -6076,6 +6089,7 @@ function importShared(sr){
     state.items.push({ uid:newUid(), cat:ids[m.c], room:id, x:m.x, y:m.y, rot:m.rot, locked:false });
   commit(before);
   enterRoom(id);
+  track("링크로 받음");                   /* p46 */
   toast(`«${name}» 배치를 받았습니다 — 되돌리기로 취소할 수 있어요`, 3000);
 }
 async function receiveShared(h){
@@ -6142,7 +6156,7 @@ function bkTick(){
   const b = bkLoad(); b.n++; bkStore(b);
   if (b.n >= b.next && !noteKind) bkNote();
 }
-function bkDone(){ bkStore({ n:0, at:Date.now(), next:BK_FIRST }); if (noteKind === "backup") hideNote(); }
+function bkDone(){ bkStore({ n:0, at:Date.now(), next:BK_FIRST }); if (noteKind === "backup") hideNote(); track("백업"); }
 $("nbNo").addEventListener("click", () => {
   if (noteKind === "backup"){ const b = bkLoad(); b.next = b.n + BK_AGAIN; bkStore(b); }
   if (noteKind === "inapp") try { sessionStorage.setItem("room-planner/inapp-ok", "1"); } catch(e){}
@@ -6163,7 +6177,7 @@ window.addEventListener("beforeinstallprompt", e => {
   e.preventDefault(); installEvt = e;
   if (!STANDALONE && !INAPP) $("installBtn").hidden = false;
 });
-window.addEventListener("appinstalled", () => { installEvt = null; $("installBtn").hidden = true; toast("홈 화면에 추가했어요 — 이제 앱처럼 열 수 있어요", 3600); });
+window.addEventListener("appinstalled", () => { installEvt = null; track("홈 화면 설치"); $("installBtn").hidden = true; toast("홈 화면에 추가했어요 — 이제 앱처럼 열 수 있어요", 3600); });
 if (!STANDALONE && !INAPP && IS_IOS) $("installBtn").hidden = false;
 $("installBtn").addEventListener("click", () => {
   closeSheets();
@@ -6176,6 +6190,34 @@ $("installBtn").addEventListener("click", () => {
   if (IS_IOS) toast("사파리 아래쪽 공유 단추(□↑) → «홈 화면에 추가» 를 누르세요", 6000);
   else toast("브라우저 메뉴(⋮) → «앱 설치» 또는 «홈 화면에 추가» 를 누르세요", 6000);
 });
+
+/* ============ p46 — 사용 측정·오류 수집 (계획서 P3-1) ============
+   GoatCounter(쿠키 없는 방문 분석, 작은 사이트는 무료). count.js 를 불러오지 않고 /count 주소로 신호 한 줄만 보낸다.
+   보내는 것: 들어온 페이지(보통 / · 홈 화면 앱이면 /앱), 판 번호, 들어온 곳(referrer), 화면 크기,
+   그리고 이벤트 이름 여섯(방 만들기·가구 추가·링크 보내기·링크로 받음·백업·홈 화면 설치)과 오류 문구(한 세션 6개까지).
+   ⚠️ 방·가구·배치·도면은 절대 보내지 않는다. GC 가 비어 있거나 https(또는 127.0.0.1 시험 서버)가 아니면 아무것도 안 보낸다. */
+const GC = "";                    /* build.py 가 GoatCounter 코드로 바꾼다(pwa/goatcounter.txt). 없으면 빈 문자열 */
+function gcSend(params){
+  if (!GC || GC.startsWith("__") || !(location.protocol === "https:" || location.hostname === "127.0.0.1")) return;
+  try {
+    const q = new URLSearchParams(Object.assign({ rnd: Math.random().toString(36).slice(2, 8) }, params));
+    const u = `https://${GC}.goatcounter.com/count?` + q.toString();
+    if (!(navigator.sendBeacon && navigator.sendBeacon(u))) { const i = new Image(); i.src = u; }
+  } catch(e){}
+}
+function track(ev){ gcSend({ p: ev, t: BUILD, e: "true" }); }
+function trackView(){
+  gcSend({ p: STANDALONE ? "/앱" : "/", t: "이걸 어디다 두지? " + BUILD, r: document.referrer || "",
+           s: [screen.width, screen.height, window.devicePixelRatio || 1].join(",") });
+}
+const errSeen = new Set();
+function trackErr(m){
+  m = String(m || "").replace(/\s+/g, " ").slice(0, 80);
+  if (!m || errSeen.has(m) || errSeen.size >= 6) return;
+  errSeen.add(m); track("오류: " + m);
+}
+window.addEventListener("error", e => trackErr(e && e.message));
+window.addEventListener("unhandledrejection", e => trackErr(e && e.reason && (e.reason.message || e.reason)));
 
 function bootNotes(){
   let ok = false; try { ok = sessionStorage.getItem("room-planner/inapp-ok") === "1"; } catch(e){}
@@ -6249,6 +6291,7 @@ if (isShareHash(location.hash)) receiveShared(takeShareHash());
 else showIntro(opt.guide ? null : openGuide);
 bootNotes();                 /* p43 — 인앱 브라우저 안내 · 백업 권유 */
 registerSW();                /* p45 — 홈 화면 앱·오프라인 */
+trackView();                 /* p46 — 방문 한 번(쿠키 없음) */
 /* 자동저장이 막혀 있으면 persist() 가 이미 경고 띠를 띄웠다 */
 /* 브라우저에 «이 사이트 저장소는 자동으로 지우지 말아 달라» 고 요청한다 (거절돼도 그만) */
 try { if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {}); } catch(e){}

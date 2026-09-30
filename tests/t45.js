@@ -26,7 +26,7 @@ const pngSize = f => { const b = fs.readFileSync(f); return [b.readUInt32BE(16),
   const html = fs.readFileSync(FILE, 'utf8'), sw = fs.readFileSync(path.join(DIR, 'sw.js'), 'utf8');
   const bnum = (html.match(/const BUILD = "([^"]+)"/) || [])[1] || '';
   chk(html.includes('<link rel="manifest" href="manifest.json">') && html.includes('apple-mobile-web-app-capable'), '완성본 머리에 manifest·apple 메타');
-  chk(sw.includes('const CACHE = "rp-' + bnum.replace(/[^0-9A-Za-z]+/g, '-') + '"'), 'sw.js 캐시 이름 = 판 번호 (' + bnum.replace(/20\d\d-\d\d-\d\d · /, '') + ')');
+  chk(sw.includes('const CACHE = "rp-' + bnum.replace(/[^0-9A-Za-z]+/g, '-') + '"'), 'sw.js 캐시 이름 = 판 번호');
 
   /* 서비스 워커 · 오프라인 */
   const c = await b.newContext({ viewport: { width: 1600, height: 900 } }); const p = await c.newPage();
@@ -44,7 +44,7 @@ const pngSize = f => { const b = fs.readFileSync(f); return [b.readUInt32BE(16),
   await c.setOffline(true);
   await p.reload(); await p.waitForTimeout(900);
   const off = await p.evaluate(() => ({ v: document.getElementById('introVer').textContent, peek: !!document.getElementById('isPeek') }));
-  chk(off.v === bnum && off.peek, `인터넷을 끊고 새로고침해도 열림 (${off.v.replace(/20\d\d-\d\d-\d\d · /, '')})`);
+  chk(off.v === bnum && off.peek, '인터넷을 끊고 새로고침해도 열림(판 번호 같음)');
   await p.click('#isPeek'); await p.waitForTimeout(1200);
   if (!(await p.$eval('#guide', n => n.classList.contains('open')))) { await p.click('#helpBtn'); await p.waitForTimeout(400); }
   await p.waitForTimeout(400);
