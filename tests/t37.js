@@ -63,7 +63,7 @@ const APP = 'file://' + (process.env.APP || (process.env.WORK || '/home/claude/w
   chk(!(await p.isVisible('#addDoorBtn')) && !(await p.isVisible('#addWinBtn')), '폰 «도구» 에는 문·창문 추가 없음');
   await p.tap('#tabbar [data-tab="more"]'); await p.waitForTimeout(300);
   await p.tap('#tabbar [data-tab="add"]'); await p.waitForTimeout(400);
-  chk(await p.$eval('#apModal', e => e.classList.contains('open')) && (await p.$$('#apModal [data-ap]')).length === 3, '«추가» 탭 → 가구·문·창문 고르기');
+  chk(await p.$eval('#apModal', e => e.classList.contains('open')) && (await p.$$('#apModal [data-ap]')).length === 4, '«추가» 탭 → 가구·문·창문·콘센트 고르기');   // p49 콘센트 추가
   await p.screenshot({ path:(process.env.WORK || '/home/claude/work') + '/p37_addpick.png' });
   await p.tap('#apModal [data-ap="door"]'); await p.waitForTimeout(500);
   chk(await p.$eval('#openModal', e => e.classList.contains('open')), '«문» → 문 창');

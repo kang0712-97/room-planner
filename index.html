@@ -205,6 +205,9 @@ button{font:inherit;color:inherit;cursor:pointer}
 .read .empty{padding:14px 11px;color:var(--muted);font-size:12.5px;text-align:center}
 .read.bad{border-color:var(--bad)}
 .read.bad .read-h{background:var(--bad-soft);color:var(--bad);border-bottom-color:var(--bad)}
+.read.info{border-color:var(--lock)}
+.read.info .read-h{background:var(--lock-soft);color:var(--lock);border-bottom-color:var(--lock)}
+.read .outnote{margin:0;padding:7px 11px;border-top:1px solid var(--line);font-size:11.5px;line-height:1.55;color:var(--muted)}
 
 .hint{font-size:11.5px;color:var(--muted);line-height:1.85}
 .hint b{color:var(--ink-2);font-weight:500}
@@ -511,7 +514,7 @@ details.fold[open]>summary{border-bottom:1px solid var(--line)}
 .afchk input{width:20px;height:20px;margin:1px 0 0;flex:0 0 auto;accent-color:var(--accent)}
 .afchk i{font-style:normal;color:var(--muted);font-size:12px}
 .afmore .btn{justify-content:center;height:40px;padding:0 6px}
-.apgrid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+.apgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .apgrid .btn{height:76px;flex-direction:column;justify-content:center;gap:6px;font-size:15px}
 .apgrid .btn .i{width:24px;height:24px}
 .selacts .btn{flex:1;height:32px;justify-content:center}
@@ -582,6 +585,7 @@ details.fold[open]>summary{border-bottom:1px solid var(--line)}
 /* 접이식 안의 동작 버튼 */
 .fold-acts{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:9px}
 .fold-acts .btn{justify-content:center}
+#addOutBtn2{grid-column:1/-1}
 .foldn{margin-left:auto;font-family:"IBM Plex Mono",monospace;font-size:11px;color:var(--ink)}
 ol.todo{margin:0;padding-left:19px;font-size:11.5px;color:var(--muted);line-height:1.75}
 ol.todo li{margin-bottom:3px}
@@ -595,6 +599,8 @@ ol.todo li:first-child{color:var(--ink-2);font-weight:500}
 .opitem:hover{border-color:var(--accent);background:var(--sunk)}
 .opitem .i{color:var(--measure)}
 .opitem.win .i{color:var(--accent)}
+.opitem.out .i{color:var(--ink-2)}
+.opitem.lockd{border-color:var(--lock);background:var(--lock-soft)}
 .opitem .nm{font-size:12.5px;font-weight:500}
 .opitem .sz{font-family:"IBM Plex Mono",monospace;font-size:10.5px;color:var(--muted)}
 .opitem .sz .l{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -942,6 +948,7 @@ ol.todo li:first-child{color:var(--ink-2);font-weight:500}
   <g id="ic-reset"><path d="M3.5 12a8.5 8.5 0 1 1 2.8 6.3"/><path d="M3.5 19v-5h5"/></g>
   <g id="ic-door"><path d="M4 21h16M7 21V4a1 1 0 0 1 1-1h8a1 1 0 0 1 1 1v17"/><circle cx="14" cy="12.5" r="1.1"/></g>
   <g id="ic-window"><rect x="3" y="4" width="18" height="14" rx="1"/><path d="M12 4v14M3 11h18M2 21h20"/></g>
+  <g id="ic-outlet"><rect x="4" y="4" width="16" height="16" rx="4"/><path d="M9.5 10v4M14.5 10v4"/></g>
   <g id="ic-edit"><path d="M4 20h4L20 8a2.1 2.1 0 0 0-3-3L5 17z"/><path d="m14.5 6.5 3 3"/></g>
   <g id="ic-copy"><rect x="8" y="8" width="12" height="12" rx="1.5"/><path d="M16 8V5.5A1.5 1.5 0 0 0 14.5 4h-9A1.5 1.5 0 0 0 4 5.5v9A1.5 1.5 0 0 0 5.5 16H8"/></g>
   <g id="ic-link"><path d="M10 13.5a4 4 0 0 0 5.7.3l3-3a4 4 0 0 0-5.7-5.7l-1.2 1.2"/><path d="M14 10.5a4 4 0 0 0-5.7-.3l-3 3a4 4 0 0 0 5.7 5.7l1.2-1.2"/></g>
@@ -1090,12 +1097,13 @@ ol.todo li:first-child{color:var(--ink-2);font-weight:500}
         </details>
 
         <details class="fold" id="openFold" open>
-          <summary>문 · 창문 <b id="openNum" class="foldn"></b></summary>
+          <summary>문 · 창문 · 콘센트 <b id="openNum" class="foldn"></b></summary>
           <div class="fold-b">
             <div class="flist" id="openList"></div>
             <div class="fold-acts">
               <button class="btn" id="addDoorBtn2"><svg class="i" viewBox="0 0 24 24"><use href="#ic-door"/></svg><span>문 추가</span></button>
               <button class="btn" id="addWinBtn2"><svg class="i" viewBox="0 0 24 24"><use href="#ic-window"/></svg><span>창문 추가</span></button>
+              <button class="btn" id="addOutBtn2"><svg class="i" viewBox="0 0 24 24"><use href="#ic-outlet"/></svg><span>콘센트 추가</span></button>
             </div>
           </div>
         </details>
@@ -1387,6 +1395,7 @@ ol.todo li:first-child{color:var(--ink-2);font-weight:500}
       <button type="button" class="btn" data-ap="furn"><svg class="i" viewBox="0 0 24 24"><use href="#ic-add"/></svg><span>가구</span></button>
       <button type="button" class="btn" data-ap="door"><svg class="i" viewBox="0 0 24 24"><use href="#ic-door"/></svg><span>문</span></button>
       <button type="button" class="btn" data-ap="win"><svg class="i" viewBox="0 0 24 24"><use href="#ic-window"/></svg><span>창문</span></button>
+      <button type="button" class="btn" data-ap="out"><svg class="i" viewBox="0 0 24 24"><use href="#ic-outlet"/></svg><span>콘센트</span></button>
     </div>
     <div class="acts"><span></span><button type="button" class="btn" id="apClose">닫기</button></div>
   </div>
@@ -1605,7 +1614,7 @@ const ROOM_PRESETS = [
 ];
 
 /* 화면에 찍히는 판 번호. 실기에서 «고쳤는데 그대로다» 를 가르는 유일한 단서다. */
-const BUILD = "2026-10-01 · p48";
+const BUILD = "2026-10-01 · p49";
 
 const KEYOPT = "room-planner/opt";
 let opt = { score:true, walk:true, unit:"mm", guide:0 };
@@ -1745,6 +1754,20 @@ function adoptWindows(r, w, d, ceil){
   }
   return out;
 }
+/* p49 — 콘센트. 문·창과 같은 벽 표시(벽·시작 거리·폭). 높이는 재지 않는다 — 앞을 막느냐만 본다 */
+function adoptOutlets(r, w, d){
+  const src = Array.isArray(r.outlets) ? r.outlets : [];
+  const out = [];
+  for (const O of src){
+    if (!O) continue;
+    const wall = WALL_OK(O.wall);
+    const span = (wall === "top" || wall === "bottom") ? w : d;
+    const ow = clampInt(O.w, 60, span);
+    out.push({ id:O.id || ("O" + (out.length + 1)), wall,
+      x0: clampInt(O.x0, 0, Math.max(0, span - ow)), w:ow });
+  }
+  return out;
+}
 
 /* v1·v2·v3 를 모두 읽는다. v1/v2 는 방이 하나뿐이었으므로 "내 방" 으로 들어간다. */
 function adopt(o){
@@ -1776,6 +1799,7 @@ function adopt(o){
         x:clampInt(r.x,-200000,200000), y:clampInt(r.y,-200000,200000),
         doors:   adoptDoors(r, w, d),
         windows: adoptWindows(r, w, d, ceil),
+        outlets: adoptOutlets(r, w, d),
         conf: r.conf || null, todo: Array.isArray(r.todo) ? r.todo : null,
         sample: !!r.sample,
         layouts: Array.isArray(r.layouts) ? r.layouts.filter(l => l && Array.isArray(l.items)) : []
@@ -3239,6 +3263,29 @@ function doorHits(){
   return out;
 }
 
+/* ============ 콘센트 가려짐 (p49) ============
+   콘센트 앞 OUT_BAND(벽에서 방 안으로 150mm) 를 가구가 덮으면 «가려짐».
+   점수·«확인 필요» 에는 넣지 않는다 — 플러그를 꽂을 수 있는지 알려 주는 정보일 뿐이다. */
+const OUT_BAND = 150;
+function outletRect(r, O){
+  const A = wallAxis(r, O.wall), p0 = wallPt(A, O.x0), p1 = wallPt(A, O.x0 + O.w);
+  const xs = [p0.x, p1.x, p0.x + A.nx * OUT_BAND], ys = [p0.y, p1.y, p0.y + A.ny * OUT_BAND];
+  return { x0:Math.min(...xs), x1:Math.max(...xs), y0:Math.min(...ys), y1:Math.max(...ys) };
+}
+function outletHits(){
+  const r = R(); if (!r) return [];
+  const out = [];
+  for (const O of (r.outlets || [])){
+    const q = outletRect(r, O), names = [];
+    for (const it of inRoom()){
+      const f = rectOf(it);
+      if (f.x0 < q.x1 - 1 && q.x0 + 1 < f.x1 && f.y0 < q.y1 - 1 && q.y0 + 1 < f.y1) names.push(spec(it).name);
+    }
+    if (names.length) out.push({ outlet:O, names });
+  }
+  return out;
+}
+
 /* ============ 도면 위에 그리기 ============ */
 
 /* 병목을 원 하나로 찍는다 — 숫자보다 "어디가" 가 먼저다.
@@ -3502,6 +3549,22 @@ function drawOpenings(){
 
     labelOutside(A, mx, my, "var(--accent-ink)",
       `창 ${fmt(W.w)} · 바닥+${fmt(W.sill)}`);
+  }
+
+  /* p49 — 콘센트: 벽 안쪽에 붙은 작은 판 + 구멍 둘. 가구가 앞을 막으면 황토색(정보 색 — 빨강은 «고칠 것» 에만).
+     글자는 달지 않는다 — 문·창 글자와 겹치기 쉽고, 목록·상태 패널에 이름이 있다. 색은 손을 뗄 때 바뀐다(문 반경과 같음) */
+  const oh = new Set(outletHits().map(h => h.outlet.id));
+  for (const O of (r.outlets || [])){
+    const A = wallAxis(r, O.wall), blk = oh.has(O.id);
+    const col = blk ? "var(--lock)" : "var(--ink-2)";
+    const c = wallPt(A, O.x0 + O.w / 2), L = Math.max(O.w, 90), T = 70;
+    const cx = c.x + A.nx * (17 + T / 2), cy = c.y + A.ny * (17 + T / 2);
+    const hz = A.dy === 0, rw = hz ? L : T, rh = hz ? T : L;
+    svg.appendChild(el("rect", { class:"outlet" + (blk ? " blk" : ""), "data-oid":O.id,
+      x:cx - rw / 2, y:cy - rh / 2, width:rw, height:rh, rx:14,
+      fill:blk ? "var(--lock-soft)" : "var(--surface)", stroke:col, "stroke-width":12 }));
+    for (const s of [-1, 1])
+      svg.appendChild(el("circle", { cx:cx + (hz ? s * L * 0.2 : 0), cy:cy + (hz ? 0 : s * L * 0.2), r:10, fill:col }));
   }
 }
 
@@ -4532,31 +4595,34 @@ $("cmpModal").addEventListener("click", e => {
 /* ============ 문 · 창문 목록 ============ */
 function renderOpenings(){
   const r = R(); if (!r) return;
-  const doors = r.doors || [], wins = r.windows || [];
-  $("openNum").textContent = `${doors.length + wins.length}개`;
+  const doors = r.doors || [], wins = r.windows || [], outs = r.outlets || [];
+  $("openNum").textContent = `${doors.length + wins.length + outs.length}개`;
   const box = $("openList"); box.replaceChildren();
 
-  if (!doors.length && !wins.length){
+  if (!doors.length && !wins.length && !outs.length){
     const e = document.createElement("p");
     e.className = "opempty";
     e.textContent = "아직 없습니다. 문과 창문을 넣어야 문 회전 반경 검사가 맞습니다.";
     box.appendChild(e);
   }
   const hurt = new Set(doorHits().map(h => h.door.id));
+  const hid = new Set(outletHits().map(h => h.outlet.id));     /* p49 */
 
   const row = (o, kind) => {
     const b = document.createElement("button");
-    b.className = "opitem" + (kind === "win" ? " win" : "") +
-                  (kind === "door" && hurt.has(o.id) ? " bad" : "");
-    const icon = kind === "door" ? "ic-door" : "ic-window";
+    b.className = "opitem" + (kind === "win" ? " win" : kind === "out" ? " out" : "") +
+                  (kind === "door" && hurt.has(o.id) ? " bad" : "") +
+                  (kind === "out" && hid.has(o.id) ? " lockd" : "");
+    const icon = kind === "door" ? "ic-door" : kind === "out" ? "ic-outlet" : "ic-window";
     /* p34 — 한 줄로 이어 쓰면 좁은 칸에서 «문위쪽 · / 1710에서 폭 / 750 · 끝쪽» 처럼 낱말 단위로 끊겼다. 두 줄 고정 */
     const l1 = `${WALL_KO[o.wall]} 벽 · 폭 ${fmt(o.w)}`;
     const l2 = kind === "door"
       ? `모서리에서 ${fmt(o.x0)} · ${o.swing === "in" ? "안으로 열림" : "밖으로 열림"}`
+      : kind === "out" ? `모서리에서 ${fmt(o.x0)}${hid.has(o.id) ? " · 가구가 가림" : ""}`
       : `모서리에서 ${fmt(o.x0)} · 바닥 +${fmt(o.sill)}~${fmt(o.head)}`;
     const desc = `<span class="l">${escapeHtml(l1)}</span><span class="l">${escapeHtml(l2)}</span>`;
     b.innerHTML = `<svg class="i" viewBox="0 0 24 24"><use href="#${icon}"/></svg>` +
-      `<span><span class="nm">${kind === "door" ? "문" : "창문"}</span>` +
+      `<span><span class="nm">${OP_KO[kind]}</span>` +
       `<span class="sz">${desc}</span></span>` +
       `<span class="ftools">` +
       `<i data-act="edit" title="수정" aria-label="수정"><svg class="i" viewBox="0 0 24 24"><use href="#ic-edit"/></svg></i>` +
@@ -4571,6 +4637,7 @@ function renderOpenings(){
   };
   for (const d of doors) box.appendChild(row(d, "door"));
   for (const w of wins)  box.appendChild(row(w, "win"));
+  for (const o of outs)  box.appendChild(row(o, "out"));
 }
 
 /* ============ 실측 신뢰도 ============ */
@@ -4719,6 +4786,16 @@ function renderClashBox(){
     html += `<div class="read bad" style="margin-top:9px">` +
       `<div class="read-h"><span>겹침</span><em>${h.cl.length + h.dh.length}건</em></div>` +
       `<dl>${rows}</dl></div>`;
+  }
+  /* p49 — 콘센트 앞을 가구가 막음. 정보만: 점수·«확인 필요»·미니 알약과 무관 */
+  const oh = outletHits();
+  if (oh.length){
+    let rows = "";
+    for (const o of oh)
+      rows += `<dt>${WALL_KO[o.outlet.wall]} 벽 콘센트</dt><dd>${o.names.map(escapeHtml).join(", ")}</dd>`;
+    html += `<div class="read info" id="outInfo" style="margin-top:9px">` +
+      `<div class="read-h"><span>콘센트 가려짐</span><em>${oh.length}개</em></div>` +
+      `<dl>${rows}</dl><p class="outnote">점수와는 상관없어요 — 플러그를 꽂을 수 있는지만 확인하세요.</p></div>`;
   }
   box.innerHTML = html;
 
@@ -4964,6 +5041,7 @@ $("rmSave").addEventListener("click", () => {
     /* p48 — 문·창문도 새 벽 길이 안으로(벽 끝에 붙어 있던 문은 끝에 붙은 채, 벽보다 긴 창은 벽 길이로) */
     r.doors = adoptDoors(r, r.w, r.d);
     r.windows = adoptWindows(r, r.w, r.d, r.ceiling);
+    r.outlets = adoptOutlets(r, r.w, r.d);          /* p49 */
     if (curRoom === r.id) $("crumbRoom").textContent = r.name;
     toast(`${name} 수정`);
   } else {
@@ -5018,15 +5096,19 @@ function opSetSeg(box, attr, val){
   for (const b of $(box).querySelectorAll("button"))
     b.setAttribute("aria-pressed", String(b.getAttribute(attr) === val));
 }
+/* p49 — kind: door | win | out(콘센트) */
+const OP_KO = { door:"문", win:"창문", out:"콘센트" };
+const opList = (r, kind) => kind === "door" ? (r.doors || []) : kind === "out" ? (r.outlets || []) : (r.windows || []);
 function askOpening(kind, id){
   const r = R(); if (!r) return;
   opKind = kind; opId = id || null;
-  const list = kind === "door" ? (r.doors || []) : (r.windows || []);
+  const list = opList(r, kind);
   const o = id ? list.find(x => x.id === id) : null;
 
-  $("opTitle").textContent = (o ? "" : "새 ") + (kind === "door" ? "문" : "창문") + (o ? " 수정" : " 추가");
+  $("opTitle").textContent = (o ? "" : "새 ") + OP_KO[kind] + (o ? " 수정" : " 추가");
   $("opDoorOnly").hidden = kind !== "door";
-  $("opWinOnly").hidden  = kind === "door";
+  $("opWinOnly").hidden  = kind !== "win";
+  $("opW").min = kind === "out" ? 60 : 200;
   $("opDel").hidden = !o;
 
   opWall  = o ? o.wall : (kind === "door" ? "top" : "bottom");
@@ -5037,7 +5119,7 @@ function askOpening(kind, id){
   opSetSeg("opSwing", "data-swing", opSwing);
 
   $("opX").value = o ? o.x0 : "";
-  $("opW").value = o ? o.w : (kind === "door" ? 800 : 1200);
+  $("opW").value = o ? o.w : (kind === "door" ? 800 : kind === "out" ? 120 : 1200);
   if (kind === "win"){
     $("opSill").value = o ? o.sill : 1000;
     $("opHead").value = o ? o.head : r.ceiling;
@@ -5070,7 +5152,7 @@ function opSync(){
   const A = wallAxis(r, opWall);
   const P = (t) => ({ x:ox + (A.ox + A.dx * t) * k, y:oy + (A.oy + A.dy * t) * k });
   const p0 = P(Math.min(X, span)), p1 = P(Math.min(X + W, span));
-  const col = opKind === "door" ? "var(--measure)" : "var(--accent)";
+  const col = opKind === "door" ? "var(--measure)" : opKind === "out" ? "var(--ink-2)" : "var(--accent)";
   PV.appendChild(mk("line", { x1:p0.x, y1:p0.y, x2:p1.x, y2:p1.y,
     stroke:"var(--surface)", "stroke-width":5 }));
   PV.appendChild(mk("line", { x1:p0.x, y1:p0.y, x2:p1.x, y2:p1.y,
@@ -5110,7 +5192,7 @@ function saveOpening(){
   const span = opSpanOf();
   const w = Math.round(Number($("opW").value));
   const x0 = Math.round(Number($("opX").value));
-  const lo = opKind === "door" ? 300 : 200;
+  const lo = opKind === "door" ? 300 : opKind === "out" ? 60 : 200;
   if (!Number.isFinite(w) || w < lo || w > span)
     return toast(`폭을 ${lo}~${span} mm 로 넣어 주세요`);
   if (!Number.isFinite(x0) || x0 < 0 || x0 + w > span)
@@ -5123,6 +5205,11 @@ function saveOpening(){
                   hinge:opHinge, swing:opSwing };
     const i = r.doors.findIndex(d => d.id === rec.id);
     if (i >= 0) r.doors[i] = rec; else r.doors.push(rec);
+  } else if (opKind === "out"){
+    if (!r.outlets) r.outlets = [];
+    const rec = { id:opId || newOid(r.outlets, "O"), wall:opWall, x0, w };
+    const i = r.outlets.findIndex(x => x.id === rec.id);
+    if (i >= 0) r.outlets[i] = rec; else r.outlets.push(rec);
   } else {
     if (!r.windows) r.windows = [];
     const sill = clampInt($("opSill").value, 0, Math.max(0, r.ceiling - 100));
@@ -5131,19 +5218,21 @@ function saveOpening(){
     const i = r.windows.findIndex(x => x.id === rec.id);
     if (i >= 0) r.windows[i] = rec; else r.windows.push(rec);
   }
-  if (r.conf) r.conf[opKind === "door" ? "door" : "window"] = "확정";
+  if (r.conf && opKind !== "out") r.conf[opKind === "door" ? "door" : "window"] = "확정";
   $("openModal").classList.remove("open");
   commit(before);
-  toast(opKind === "door" ? "문을 반영했습니다" : "창문을 반영했습니다");
+  toast(opKind === "door" ? "문을 반영했습니다" : opKind === "out" ? "콘센트를 반영했습니다" : "창문을 반영했습니다");
 }
 function dropOpening(kind, id){
   const r = R(); if (!r) return;
-  askConfirm(kind === "door" ? "문 삭제" : "창문 삭제",
+  askConfirm(OP_KO[kind] + " 삭제",
     kind === "door" ? "이 문을 지웁니다. 문 회전 반경 검사도 함께 사라집니다."
-                    : "이 창문을 지웁니다. 3D 뷰와 프롬프트에서도 사라집니다.",
+    : kind === "out" ? "이 콘센트를 지웁니다."
+                    : "이 창문을 지웁니다. 창 가림 검사도 함께 사라집니다.",
     () => {
       const before = snapshot();
       if (kind === "door") r.doors = (r.doors || []).filter(d => d.id !== id);
+      else if (kind === "out") r.outlets = (r.outlets || []).filter(o => o.id !== id);
       else r.windows = (r.windows || []).filter(w => w.id !== id);
       commit(before);
       toast("지웠습니다");
@@ -5170,6 +5259,7 @@ for (const id of ["opX","opW","opSill","opHead"])
   $(id).addEventListener("input", opSync);
 for (const id of ["addDoorBtn","addDoorBtn2"]) $(id).addEventListener("click", () => askOpening("door", null));
 for (const id of ["addWinBtn","addWinBtn2"])  $(id).addEventListener("click", () => askOpening("win", null));
+$("addOutBtn2").addEventListener("click", () => askOpening("out", null));     /* p49 — 툴바에는 안 넣는다(데스크톱 툴바 한 줄 유지) */
 
 /* ============ 도면 ============ */
 function setTool(t){
@@ -5764,6 +5854,7 @@ $("apModal").addEventListener("click", e => {
   if (!b) return;
   $("apModal").classList.remove("open");
   const a = b.getAttribute("data-ap");
+  if (a === "out") return askOpening("out", null);          /* p49 */
   $(a === "door" ? "addDoorBtn" : a === "win" ? "addWinBtn" : "addBtn").click();
 });
 /* 도면을 건드리면 시트는 비켜 준다 — 시트를 닫으려고 «닫기» 를 찾게 만들지 않는다 */
@@ -6020,7 +6111,9 @@ function sharePayload(){
     return [idx.get(s.id), Math.round(i.x), Math.round(i.y), i.rot]; });
   return { v:1, r:{ n:r.name, w:r.w, d:r.d, c:r.ceiling,
     D:(r.doors || []).map(o => [o.wall, o.x0, o.w, o.hinge, o.swing]),
-    W:(r.windows || []).map(o => [o.wall, o.x0, o.w, o.sill, o.head]) }, c:cats, i:its };
+    W:(r.windows || []).map(o => [o.wall, o.x0, o.w, o.sill, o.head]),
+    /* p49 — 콘센트가 있을 때만 싣는다(없으면 링크 길이 그대로) */
+    ...((r.outlets || []).length ? { O:r.outlets.map(o => [o.wall, o.x0, o.w]) } : {}) }, c:cats, i:its };
 }
 async function shareLink(){
   const p = sharePayload(); if (!p) return null;
@@ -6070,6 +6163,7 @@ function shareRoom(o){
   const arr = (a, n) => Array.isArray(a) ? a.filter(Array.isArray).slice(0, n) : [];
   const doors = adoptDoors({ doors: arr(o.r.D, 12).map(a => ({ wall:a[0], x0:a[1], w:a[2], hinge:a[3] === "start" ? "start" : "end", swing:a[4] })) }, w, d);
   const windows = adoptWindows({ windows: arr(o.r.W, 12).map(a => ({ wall:a[0], x0:a[1], w:a[2], sill:a[3], head:a[4] })) }, w, d, ceil);
+  const outlets = adoptOutlets({ outlets: arr(o.r.O, 24).map(a => ({ wall:a[0], x0:a[1], w:a[2] })) }, w, d);
   const cats = [];
   for (const c of o.c){
     if (!Array.isArray(c) || typeof c[0] !== "string") return null;
@@ -6084,7 +6178,7 @@ function shareRoom(o){
     const fw = rot % 180 === 0 ? s.w : s.d, fd = rot % 180 === 0 ? s.d : s.w;
     items.push({ c:a[0], rot, x:clampInt(a[1], 0, Math.max(0, w - fw)), y:clampInt(a[2], 0, Math.max(0, d - fd)) });
   }
-  return { name, w, d, ceiling:ceil, doors, windows, cats, items };
+  return { name, w, d, ceiling:ceil, doors, windows, outlets, cats, items };
 }
 async function readShareHash(h){
   const m = /^#([ru])=([A-Za-z0-9_-]+)$/.exec(h || "");
@@ -6105,7 +6199,7 @@ function importShared(sr){
   let name = sr.name, k = 2;
   while (state.rooms.some(q => q.name === name)) name = sr.name.slice(0, 20) + " " + k++;
   state.rooms.push({ id, name, w:sr.w, d:sr.d, ceiling:sr.ceiling, x:Math.round(x), y:0,
-                     doors:sr.doors, windows:sr.windows, layouts:[], conf:null, todo:null });
+                     doors:sr.doors, windows:sr.windows, outlets:sr.outlets || [], layouts:[], conf:null, todo:null });
   /* 같은 이름·같은 치수의 가구가 이미 있으면 그걸 쓴다 — 받을 때마다 가구 목록이 불어나지 않게 */
   const ids = sr.cats.map(c => {
     const f = state.catalog.find(e => e.name === c.name && e.w === c.w && e.d === c.d && e.h === c.h &&
