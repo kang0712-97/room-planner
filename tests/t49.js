@@ -17,8 +17,13 @@ const FILE = process.env.APP || WORK + '/app.html', APP = 'file://' + FILE;
       return { name:c.name, x0:i.x, y0:i.y, x1:i.x + fw, y1:i.y + fd }; }); };
   const hit = (a, q) => a.x0 < q.x1 - 1 && q.x0 + 1 < a.x1 && a.y0 < q.y1 - 1 && q.y0 + 1 < a.y1;
   const panelText = p => p.$eval('#clashBox', n => { const c = n.cloneNode(true); const o = c.querySelector('#outInfo'); if (o) o.remove(); return c.textContent; });
+  /* p51 — 추가는 «벽을 누르세요» → 벽 가운데를 누르고 → «숫자로 입력» 에서 정확한 자리 */
+  const wallMid = (p, wall) => p.evaluate(w => { const b = document.querySelector('#plan > rect').getBoundingClientRect();
+    return { top:[b.x + b.width / 2, b.y + 3], bottom:[b.x + b.width / 2, b.y + b.height - 3], left:[b.x + 3, b.y + b.height / 2], right:[b.x + b.width - 3, b.y + b.height / 2] }[w]; }, wall);
   const addOutlet = async (p, wall, x0, btn) => {
     await p.click(btn); await p.waitForTimeout(250);
+    const q = await wallMid(p, wall); await p.mouse.click(q[0], q[1]); await p.waitForTimeout(400);
+    await p.click('#selBox [data-ob="exact"]'); await p.waitForTimeout(250);
     await p.click(`#opWall [data-wall="${wall}"]`); await p.fill('#opX', String(x0));
     await p.click('#opSave'); await p.waitForTimeout(400);
   };
@@ -48,9 +53,8 @@ const FILE = process.env.APP || WORK + '/app.html', APP = 'file://' + FILE;
   chk(free && blocked, `시험 자리: 빈 곳 ${free && free.wall + ' ' + free.x} · 막힌 곳 ${blocked && blocked.wall + ' ' + blocked.x + ' (' + blocked.name + ')'}`);
 
   await p.click('#addOutBtn2'); await p.waitForTimeout(250);
-  chk(await p.$eval('#opTitle', n => n.textContent) === '새 콘센트 추가' && await p.inputValue('#opW') === '120'
-      && !(await p.isVisible('#opDoorOnly')) && !(await p.isVisible('#opWinOnly')), '추가 창: «새 콘센트 추가» · 폭 120 · 문/창 칸 없음');
-  await p.click('#opCancel'); await p.waitForTimeout(200);
+  chk(!(await p.$eval('#openModal', n => n.classList.contains('open'))) && (await p.textContent('#pbText')) === '콘센트를 놓을 벽을 누르세요', '«콘센트 추가» → 숫자 창 없이 «콘센트를 놓을 벽을 누르세요»');   // p51
+  await p.click('#pbCancel'); await p.waitForTimeout(200);
 
   await addOutlet(p, free.wall, free.x, '#addOutBtn2');
   s = await st(p); r = s.rooms[0];
@@ -123,9 +127,10 @@ const FILE = process.env.APP || WORK + '/app.html', APP = 'file://' + FILE;
   const ap = await m.$$eval('#apModal [data-ap]', e => e.map(n => [n.getAttribute('data-ap'), Math.round(n.getBoundingClientRect().height), Math.round(n.getBoundingClientRect().width)]));
   chk(ap.length === 4 && ap[3][0] === 'out' && ap.every(a => a[1] >= 44 && a[2] >= 44), `추가 고르기 4칸 ${JSON.stringify(ap)}`);
   await m.tap('#apModal [data-ap="out"]'); await m.waitForTimeout(400);
-  chk(await m.$eval('#openModal', n => n.classList.contains('open')) && await m.$eval('#opTitle', n => n.textContent) === '새 콘센트 추가', '폰: 콘센트 → 추가 창');
-  await m.click(`#opWall [data-wall="${blocked.wall}"]`); await m.fill('#opX', String(blocked.x));
-  await m.tap('#opSave'); await m.waitForTimeout(400);
+  chk(await m.isVisible('#placeBar') && (await m.textContent('#pbText')) === '콘센트를 놓을 벽을 누르세요', '폰: 콘센트 → «벽을 누르세요» 띠');   // p51
+  const mb = await m.evaluate(w => { const s = JSON.parse(localStorage.getItem('room-planner/3')); const r = s.rooms[0]; const b = document.querySelector('#plan > rect').getBoundingClientRect(); return { x:b.x, y:b.y, k:b.width / r.w, w:r.w, d:r.d }; });
+  const bx = blocked.x + 60, at = { top:[mb.x + bx * mb.k, mb.y + 4], bottom:[mb.x + bx * mb.k, mb.y + mb.d * mb.k - 4], left:[mb.x + 4, mb.y + bx * mb.k], right:[mb.x + mb.w * mb.k - 4, mb.y + bx * mb.k] }[blocked.wall];
+  await m.touchscreen.tap(at[0], at[1]); await m.waitForTimeout(400);
   chk((await st(m)).rooms[0].outlets.length === 1 && (await m.$$('#plan rect.outlet.blk')).length === 1, '폰: 막힌 자리에 추가 → 황토색');
   await c3.close();
 

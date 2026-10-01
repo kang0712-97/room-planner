@@ -234,6 +234,21 @@ kbd{font-family:"IBM Plex Mono",monospace;font-size:10.5px;border:1px solid var(
 .stage-tools button:hover{background:var(--surface-2);color:var(--ink)}
 .stage-tools .zl{font-family:"IBM Plex Mono",monospace;font-size:11px;color:var(--muted);
   padding:0 6px;min-width:46px;text-align:center}
+/* p51 — «○○을 놓을 벽을 누르세요» 띠와 개구부 판정선 */
+/* 데스크톱은 도면 왼쪽 위 — 아래 가운데에 두었더니 방의 아래쪽 벽을 가려서 거기엔 못 놓았다.
+   띠 자체는 누름을 통과시킨다(글자 위를 눌러도 그 아래 벽에 놓인다). 단추만 받는다 */
+.placebar{position:absolute;left:16px;top:16px;z-index:6;pointer-events:none;
+  display:flex;flex-wrap:wrap;gap:6px;align-items:center;justify-content:center;
+  background:var(--surface);border:1.5px solid var(--accent);border-radius:12px;padding:8px 10px;
+  box-shadow:0 6px 18px -10px rgba(0,0,0,.45);max-width:min(340px, calc(100% - 32px))}
+.placebar #pbText{flex-basis:100%;text-align:center;font-weight:600;color:var(--accent-ink);font-size:14px}
+.placebar .btn{min-height:44px;justify-content:center;pointer-events:auto}
+.pbwin{display:flex;gap:6px}
+.pbwin .btn[aria-pressed="true"]{background:var(--accent-soft);border-color:var(--accent);color:var(--accent-ink);font-weight:600}
+#opbar .sb-act[aria-pressed="true"]{background:var(--accent-soft);border-color:var(--accent);color:var(--accent-ink)}
+#plan .ophit{cursor:grab}
+.selacts.opacts{flex-wrap:wrap}
+.selacts.opacts .btn{flex:1 1 auto;white-space:nowrap}      /* 좁은 오른쪽 칸에서 «삭제» 가 잘렸다 */
 /* 모바일에서 도면 위에 얹는 한 줄 상태 — 끌면서 봐야 하는 정보다 */
 .ministat{display:none}
 @media(max-width:1100px){
@@ -833,6 +848,7 @@ ol.todo li:first-child{color:var(--ink-2);font-weight:500}
   .tapefab.armed{background:var(--bad);border-color:var(--bad);color:#fff}
   #tapeBtn{display:none}
   .sb-sz{display:none}
+  #opbar .sb-sz{display:block}          /* p51 — 문·창문 줄은 «어느 벽 · 폭 · 열림» 이 곧 확인거리 */
   .notebar{top:52px;flex-wrap:wrap;justify-content:flex-end}
   .notebar #nbText{flex:1 1 100%}
   .bar .util{display:flex !important;flex-wrap:wrap;gap:8px}
@@ -879,16 +895,18 @@ ol.todo li:first-child{color:var(--ink-2);font-weight:500}
   .tabbar button .i{width:19px;height:19px}
   .tabbar button[aria-pressed="true"]{color:var(--accent-ink);background:var(--accent-soft)}
 
-  body.has-sel .selbar{display:flex}
+  body.has-sel #selbar,body.has-op #opbar{display:flex}
   body.sh-list .selbar,body.sh-stat .selbar,body.sh-more .selbar{display:none}
 
   /* 줌 버튼은 핀치가 대신한다. 전체 보기 하나만 남긴다 */
   #zIn,#zOut{display:none}
   .zoomer{bottom:calc(var(--tabh) + 12px)}
-  body.has-sel .zoomer{bottom:calc(var(--tabh) + 66px)}
+  body.has-sel .zoomer,body.has-op .zoomer{bottom:calc(var(--tabh) + 66px)}
   .ministat{bottom:calc(var(--tabh) + 10px)}
-  body.has-sel .ministat{display:none}
+  body.has-sel .ministat,body.has-op .ministat,body.placing .ministat{display:none}
+  .placebar{left:10px;right:96px;top:auto;bottom:calc(var(--tabh) + 10px);max-width:none}
   .toast{top:auto;bottom:calc(var(--tabh) + 66px)}
+  body.placing .toast{bottom:calc(var(--tabh) + 190px)}   /* p51 — «벽을 누르세요» 띠를 가리지 않게 */
 }
 
 .selbar{
@@ -1182,6 +1200,12 @@ ol.todo li:first-child{color:var(--ink-2);font-weight:500}
         <button id="zFit" class="zl" title="전체 보기로 되돌리기" aria-label="전체 보기"><span id="zLabel">100%</span></button>
       </div>
       <div class="ministat" id="miniStat" hidden></div>
+      <!-- p51 — 문·창문·콘센트 놓는 중 -->
+      <div class="placebar" id="placeBar" hidden>
+        <span id="pbText"></span>
+        <span class="pbwin" id="pbWin" hidden><button type="button" class="btn" data-pw="0" aria-pressed="true">보통 창</button><button type="button" class="btn" data-pw="1" aria-pressed="false">거실 창(바닥까지)</button></span>
+        <button type="button" class="btn" id="pbCancel">취소</button>
+      </div>
       <div class="toast" id="toast"></div>
     </div>
 
@@ -1256,6 +1280,17 @@ ol.todo li:first-child{color:var(--ink-2);font-weight:500}
   <!-- p46 — 사용자 요청: 고른 가구 줄에서 바로 보관·삭제(p37 에 수정 창 안으로 옮겼던 것을 되살림) -->
   <button type="button" class="sb-act" data-sb="store" aria-label="보관함에 넣기"><svg class="i" viewBox="0 0 24 24"><use href="#ic-box"/></svg><span id="sbStoreL">보관</span></button>
   <button type="button" class="sb-act danger" data-sb="del" aria-label="삭제"><svg class="i" viewBox="0 0 24 24"><use href="#ic-trash"/></svg><span>삭제</span></button>
+</div>
+<!-- p51 — 고른 문·창문·콘센트 한 줄. 가구 줄(#selbar)과 따로 둔다(그걸 보는 시험이 많다) -->
+<div class="selbar" id="opbar">
+  <button type="button" class="sb-info" id="obInfo">
+    <span class="sb-nm" id="obNm"></span>
+    <span class="sb-sz" id="obSz"></span>
+  </button>
+  <button type="button" class="sb-act" data-ob="flip" aria-label="여는 방향 바꾸기"><svg class="i" viewBox="0 0 24 24"><use href="#ic-rotate"/></svg><span>방향</span></button>
+  <button type="button" class="sb-act" data-ob="floor" aria-label="바닥까지 창" aria-pressed="false"><svg class="i" viewBox="0 0 24 24"><use href="#ic-window"/></svg><span>바닥까지</span></button>
+  <button type="button" class="sb-act" data-ob="exact" aria-label="숫자로 입력"><svg class="i" viewBox="0 0 24 24"><use href="#ic-edit"/></svg><span>숫자로</span></button>
+  <button type="button" class="sb-act danger" data-ob="del" aria-label="삭제"><svg class="i" viewBox="0 0 24 24"><use href="#ic-trash"/></svg><span>삭제</span></button>
 </div>
 
 <!-- 이미지로 저장 — 폰에서는 «내려받기» 가 잘 안 먹어서 그림을 띄우고 길게 누르게 한다 -->
@@ -1332,14 +1367,14 @@ ol.todo li:first-child{color:var(--ink-2);font-weight:500}
 
     <div><label id="opPosLbl">벽 시작점에서 거리 / 폭 — mm</label>
       <div class="row2">
-        <input id="opX" type="number" step="10" min="0" placeholder="시작 거리">
+        <input id="opX" type="number" step="10" min="0" placeholder="거리">
         <input id="opW" type="number" step="10" min="200" placeholder="폭">
       </div>
       <p class="hint" id="opSpan"></p>
     </div>
 
     <div id="opDoorOnly">
-      <div><label>경첩 — 문이 붙어 있는 쪽</label>
+      <div><label>문이 매달린 쪽</label>
         <div class="seg" id="opHinge">
           <button data-hinge="start" aria-pressed="true">시작 쪽</button>
           <button data-hinge="end" aria-pressed="false">끝 쪽</button>
@@ -1614,7 +1649,7 @@ const ROOM_PRESETS = [
 ];
 
 /* 화면에 찍히는 판 번호. 실기에서 «고쳤는데 그대로다» 를 가르는 유일한 단서다. */
-const BUILD = "2026-10-02 · p50";
+const BUILD = "2026-10-02 · p51";
 
 const KEYOPT = "room-planner/opt";
 let opt = { score:true, walk:true, unit:"mm", guide:0 };
@@ -2057,6 +2092,9 @@ function renderScene(){
 /* ---------- 줄자 ----------
    문서 상태가 아니라 도구라서 저장·되돌리기에는 넣지 않는다. */
 let tape = null, tapeDrag = null;
+/* p51 — 문·창문·콘센트. placing = 놓을 종류(벽을 누르면 생긴다), placeWinFloor = 창문을 «바닥까지» 로 놓을지,
+   opSel = 고른 개구부 { kind, id }, opDrag = 벽을 따라 끄는 중. 가구 고르기(sel)와 동시에 서지 않는다. */
+let placing = null, placeWinFloor = false, opSel = null, opDrag = null;
 function newTape(){
   const cx = view.x + view.w/2, cy = view.y + view.h/2, L = view.w * 0.34;
   const y = Math.round(cy);
@@ -2276,7 +2314,11 @@ function drawRoom(){
   svg.appendChild(el("rect", { x:0, y:0, width:r.w, height:r.d, fill:"none",
     stroke:"var(--ink)", "stroke-width":26 }));
 
-  drawOpenings();     /* 벽선을 그린 뒤라야 개구부가 벽을 끊어 보인다 */
+  /* p51 — 놓는 중엔 네 벽을 초록으로 — «여기를 누르라» 가 글보다 먼저 보인다 */
+  if (placing) svg.appendChild(el("rect", { class:"placewall", x:0, y:0, width:r.w, height:r.d, fill:"none",
+    stroke:"var(--accent)", "stroke-width":Math.max(60, pxMm(7)), "stroke-opacity":.5, "pointer-events":"none" }));
+  /* 벽선을 그린 뒤라야 개구부가 벽을 끊어 보인다 · p51 — 한 묶음(#opLayer)이라 끄는 동안 이것만 다시 그린다 */
+  const opG = el("g", { id:"opLayer" }); svg.appendChild(opG); fillOpLayer(opG);
   asDyn(drawClearance);
 
   const dim = el("g", { stroke:"var(--muted)", "stroke-width":10, fill:"none" });
@@ -2576,6 +2618,10 @@ function onDown(e){
     return;
   }
 
+  /* p51 — 놓는 중: 가구·개구부를 건너뛰고 «탭» 만 본다(침대 뒤 벽에도 놓을 수 있게). 끌면 화면만 밀린다 */
+  if (placing){ startPan(m, pt, e); return; }
+  const oh = e.target && e.target.closest ? e.target.closest(".ophit") : null;
+  if (oh){ startOpDrag(oh.getAttribute("data-op"), m, pt, e); return; }
   const node = e.target && e.target.closest ? e.target.closest(".fg") : null;
   if (node){ startDrag(node.getAttribute("data-uid"), pt, false, e); return; }
   /* 빈 바닥 — «탭» 이면 고르기를 풀고, «끌기» 면 대지를 민다.
@@ -2656,6 +2702,18 @@ function onMove(e){
     queueMove(renderScene);
     return;
   }
+  if (opDrag){                                  /* p51 — 벽을 따라서만 */
+    if (e.cancelable) e.preventDefault();
+    if (!past(opDrag, pt)) return;            // 아직 «누르고만» 있다 — 떼면 고르기
+    const r = R(), O = r && opList(r, opDrag.kind).find(o => o.id === opDrag.id);
+    if (!O){ opDrag = null; return; }
+    const A = wallAxis(r, O.wall), m = toMm(pt.x, pt.y);
+    const t = (m.x - A.ox) * A.dx + (m.y - A.oy) * A.dy;
+    O.x0 = clampInt(Math.round((opDrag.x00 + t - opDrag.t0) / 10) * 10, 0, Math.max(0, A.len - O.w));
+    opDrag.moved = true;
+    queueMove(opFrame);
+    return;
+  }
   if (drag){
     const it = ITEM(drag.uid);
     if (!it){ drag = null; return; }
@@ -2713,6 +2771,11 @@ function onUp(e){
     else enterRoom(rd.rid);
     unbindMove(); refreshAll(); return;
   }
+  if (opDrag){
+    const od = opDrag; opDrag = null;
+    if (od.moved) commit(od.before);
+    unbindMove(); refreshAll(); return;
+  }
   if (drag){
     const it = ITEM(drag.uid);
     if (it){
@@ -2731,7 +2794,10 @@ function onUp(e){
     const p0 = pan; pan = null; svg.classList.remove("panning");
     /* 문턱을 못 넘었으면 민 게 아니라 «빈 곳을 탭한 것» 이다 → 고르기를 푼다.
        밀었을 때는 풀지 않는다 — 보던 가구를 놓치지 않고 화면만 옮길 수 있어야 한다. */
-    if (!p0.on && mode === "room") select(null);
+    if (!p0.on && mode === "room"){
+      if (placing) placeOpening({ x:p0.mx, y:p0.my });      /* p51 — 놓는 중의 탭 = 그 벽에 놓기 */
+      else select(null);
+    }
   }
   unbindMove(); refreshAll();
 }
@@ -2788,7 +2854,8 @@ stage.addEventListener("wheel", e => {
 
 window.addEventListener("keydown", e => {
   if (e.target.matches && e.target.matches("input, textarea")) return;
-  if (e.key === "Escape"){ closeModals(); setTool(null); if (drawerOpen) setDrawer(false); return; }
+  if (e.key === "Escape"){ closeModals(); setTool(null); if (drawerOpen) setDrawer(false);
+    if (placing){ placing = null; refreshAll(); } return; }
   const mod = e.metaKey || e.ctrlKey;
   if (mod && e.key.toLowerCase() === "z"){ e.preventDefault(); e.shiftKey ? redo() : undo(); return; }
   if (mode !== "room" || !sel) return;
@@ -3496,6 +3563,14 @@ function drawOpenings(){
       /* 문짝 — 열린 위치에 실선으로 */
       svg.appendChild(el("line", { x1:S.x, y1:S.y,
         x2:S.x + S.nx * S.r, y2:S.y + S.ny * S.r, stroke:col, "stroke-width":22 }));
+    } else {
+      /* p51 — 밖여닫이: 예전엔 그림이 없어 «여는 방향 바꾸기» 를 누르다 보면 문이 사라진 것처럼 보였다.
+         방 바깥에 옅은 점선만(통로·점수 계산엔 안 들어감) */
+      const So = doorSectorOut(r, D);
+      svg.appendChild(el("path", { d:sectorPath(So), fill:"none", stroke:col, "stroke-width":8,
+        "stroke-dasharray":"40 26", "stroke-opacity":.45, "pointer-events":"none" }));
+      svg.appendChild(el("line", { x1:So.x, y1:So.y, x2:So.x + So.nx * So.r, y2:So.y + So.ny * So.r,
+        stroke:col, "stroke-width":14, "stroke-opacity":.45, "pointer-events":"none" }));
     }
     /* 개구부 자체 — 벽을 끊어 표시 */
     svg.appendChild(el("line", { x1:p0.x, y1:p0.y, x2:p1.x, y2:p1.y,
@@ -3505,6 +3580,7 @@ function drawOpenings(){
 
     labelOutside(A, (p0.x + p1.x) / 2, (p0.y + p1.y) / 2, col,
       `문 ${fmt(D.w)}${D.swing === "out" ? " 밖여닫이" : ""}`);
+    opHit(r, A, D, "door");
   }
 
   /* 창은 벽에 «묻혀» 있었다 — 18mm 떨어진 가는 선 둘이라 폰에서는 사실상 안 보였다.
@@ -3548,7 +3624,8 @@ function drawOpenings(){
         stroke:"var(--accent-ink)", "stroke-width":13 }));
 
     labelOutside(A, mx, my, "var(--accent-ink)",
-      `창 ${fmt(W.w)} · 바닥+${fmt(W.sill)}`);
+      W.sill === 0 ? `창 ${fmt(W.w)} · 바닥까지` : `창 ${fmt(W.w)} · 바닥+${fmt(W.sill)}`);
+    opHit(r, A, W, "win");
   }
 
   /* p49 — 콘센트: 벽 안쪽에 붙은 작은 판 + 구멍 둘. 가구가 앞을 막으면 황토색(정보 색 — 빨강은 «고칠 것» 에만).
@@ -3565,7 +3642,42 @@ function drawOpenings(){
       fill:blk ? "var(--lock-soft)" : "var(--surface)", stroke:col, "stroke-width":12 }));
     for (const s of [-1, 1])
       svg.appendChild(el("circle", { cx:cx + (hz ? s * L * 0.2 : 0), cy:cy + (hz ? 0 : s * L * 0.2), r:10, fill:col }));
+    opHit(r, A, O, "out");
   }
+}
+
+/* ============ p51 — 개구부 고르기·끌기 ============
+   판정은 눈에 안 보이는 굵은 선(.ophit). 벽 «바깥» 30px + 안쪽 8px — 창 아래 책상처럼 벽에 붙은 가구를
+   잡는 자리를 빼앗지 않게 바깥으로 몰았다(방 바깥은 비어 있다). 짧은 콘센트도 손가락 폭(44px)은 잡히게 늘린다. */
+function opHit(r, A, O, kind){
+  const out = pxMm(30), inn = pxMm(8), mid = (inn - out) / 2;
+  const ext = Math.max(0, (pxMm(44) - O.w) / 2);
+  const p0 = wallPt(A, O.x0 - ext), p1 = wallPt(A, O.x0 + O.w + ext);
+  svg.appendChild(el("line", { class:"ophit", "data-op":kind + ":" + O.id,
+    x1:p0.x + A.nx * mid, y1:p0.y + A.ny * mid, x2:p1.x + A.nx * mid, y2:p1.y + A.ny * mid,
+    stroke:"transparent", "stroke-width":out + inn, "pointer-events":"stroke" }));
+  if (opSel && opSel.kind === kind && opSel.id === O.id){
+    const q0 = wallPt(A, O.x0), q1 = wallPt(A, O.x0 + O.w);
+    svg.appendChild(el("line", { class:"opsel", x1:q0.x, y1:q0.y, x2:q1.x, y2:q1.y,
+      stroke:"var(--accent)", "stroke-width":Math.max(90, pxMm(11)), "stroke-opacity":.35,
+      "stroke-linecap":"round", "pointer-events":"none" }));
+  }
+}
+function doorSectorOut(r, D){
+  const A = wallAxis(r, D.wall);
+  const t = D.hinge === "end" ? D.x0 + D.w : D.x0, P = wallPt(A, t), s = D.hinge === "end" ? -1 : 1;
+  return { x:P.x, y:P.y, r:D.w, ax:A.dx * s, ay:A.dy * s, nx:-A.nx, ny:-A.ny };
+}
+/* drawOpenings 는 svg 끝에 붙인다 — 붙은 것들을 묶음으로 옮긴다 */
+function fillOpLayer(g){
+  const n0 = svg.childNodes.length;
+  drawOpenings();
+  g.replaceChildren(...[...svg.childNodes].slice(n0));
+}
+/* 끄는 동안(p40 규칙): 도면 통째가 아니라 #opLayer 만. 통로·문 막힘은 손을 뗄 때 refreshAll */
+function opFrame(){
+  const g = svg.querySelector("#opLayer");
+  if (g) fillOpLayer(g); else renderScene();
 }
 
 /* «더 나은 자리» 후보를 도면 위에 얹는다.
@@ -4064,11 +4176,11 @@ const escapeHtml = s => String(s).replace(/[&<>"']/g, c =>
   ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" }[c]));
 const fmt = mm => unit === "cm" ? (mm/10).toFixed(mm % 10 ? 1 : 0) : String(Math.round(mm));
 const unitLabel = () => unit === "cm" ? "cm" : "mm";
-function select(uid){ flushNudge(); sel = uid; closeSheets(); refreshAll(); }
+function select(uid){ flushNudge(); sel = uid; opSel = null; closeSheets(); refreshAll(); }
 
 function goHome(){
   tapeOff();                    /* p41 — 방에서 나가면 줄자도 치운다 */
-  mode = "home"; curRoom = null; sel = null; setTool(null);
+  mode = "home"; curRoom = null; sel = null; placing = null; opSel = null; setTool(null);
   $("homeTools").style.display = "flex";
   $("roomTools").style.display = "none";
   $("homePanel").hidden = false;
@@ -4085,7 +4197,7 @@ function goHome(){
 function enterRoom(rid){
   if (!ROOMOF(rid)) return;
   closeSheets();                 /* 방에 들어가면 목록 시트는 비켜 준다 */
-  mode = "room"; curRoom = rid; sel = null; setTool(null);
+  mode = "room"; curRoom = rid; sel = null; placing = null; opSel = null; setTool(null);
   $("homeTools").style.display = "none";
   $("roomTools").style.display = "flex";
   $("homePanel").hidden = true;
@@ -4815,6 +4927,9 @@ function renderSelBox(){
   const box = $("selBox");
   if (mode !== "room") return;
   const it = sel ? ITEM(sel) : null;
+  /* p51 — 문·창문·콘센트를 골랐으면 그 칸(데스크톱). 폰은 #opbar */
+  const op = !it ? opObj() : null;
+  if (op){ box.innerHTML = opBoxHtml(op); return; }
   /* 빈 상자를 둘 두지 않는다 — 무엇을 기대할지 한 문단으로 미리 알려 준다 */
   if (!it){ box.innerHTML = '<p class="selhint">가구를 누르면 규격과 네 벽까지의 거리, ' +
     '그리고 «더 나은 자리» 가 여기 나옵니다.</p>'; return; }
@@ -5132,9 +5247,12 @@ function askOpening(kind, id){
 function opSync(){
   const r = R(); if (!r) return;
   const span = opSpanOf();
-  $("opSpan").textContent =
-    `${WALL_KO[opWall]} 벽 길이 ${fmt(span)} ${unitLabel()} — ` +
-    (opWall === "top" || opWall === "bottom" ? "왼쪽 끝" : "위쪽 끝") + "에서 잰 거리입니다.";
+  /* p51 — «벽 시작점에서» 대신 실제로 줄자를 대는 벽 이름. 위·아래 벽은 왼쪽 끝, 왼·오른 벽은 위쪽 끝이 시작점(wallAxis) */
+  const hz = opWall === "top" || opWall === "bottom";
+  $("opPosLbl").textContent = `${hz ? "왼쪽" : "위쪽"} 벽에서 거리 / 폭 — mm`;
+  $("opSpan").textContent = `${WALL_KO[opWall]} 벽 길이 ${fmt(span)} ${unitLabel()}`;
+  $("opHinge").querySelector('[data-hinge="start"]').textContent = hz ? "왼쪽" : "위";
+  $("opHinge").querySelector('[data-hinge="end"]').textContent   = hz ? "오른쪽" : "아래";
 
   const W = Math.max(0, Number($("opW").value) || 0);
   const X = Math.max(0, Number($("opX").value) || 0);
@@ -5193,6 +5311,9 @@ function saveOpening(){
   const w = Math.round(Number($("opW").value));
   const x0 = Math.round(Number($("opX").value));
   const lo = opKind === "door" ? 300 : opKind === "out" ? 60 : 200;
+  /* p51 — 예전엔 거리를 비우면 말없이 0(모서리)이 됐다 */
+  if ($("opX").value.trim() === "")
+    return toast(`${(opWall === "top" || opWall === "bottom") ? "왼쪽" : "위쪽"} 벽에서 몇 mm 인지 적어 주세요`);
   if (!Number.isFinite(w) || w < lo || w > span)
     return toast(`폭을 ${lo}~${span} mm 로 넣어 주세요`);
   if (!Number.isFinite(x0) || x0 < 0 || x0 + w > span)
@@ -5257,9 +5378,10 @@ for (const b of $("opSwing").querySelectorAll("button"))
     opSetSeg("opSwing", "data-swing", opSwing); opSync(); });
 for (const id of ["opX","opW","opSill","opHead"])
   $(id).addEventListener("input", opSync);
-for (const id of ["addDoorBtn","addDoorBtn2"]) $(id).addEventListener("click", () => askOpening("door", null));
-for (const id of ["addWinBtn","addWinBtn2"])  $(id).addEventListener("click", () => askOpening("win", null));
-$("addOutBtn2").addEventListener("click", () => askOpening("out", null));     /* p49 — 툴바에는 안 넣는다(데스크톱 툴바 한 줄 유지) */
+/* p51 — 추가는 창 대신 «벽을 누르세요». 숫자는 놓은 뒤 «숫자로» 에서 */
+for (const id of ["addDoorBtn","addDoorBtn2"]) $(id).addEventListener("click", () => startPlacing("door"));
+for (const id of ["addWinBtn","addWinBtn2"])  $(id).addEventListener("click", () => startPlacing("win"));
+$("addOutBtn2").addEventListener("click", () => startPlacing("out"));     /* p49 — 툴바에는 안 넣는다(데스크톱 툴바 한 줄 유지) */
 
 /* ============ 도면 ============ */
 function setTool(t){
@@ -5396,6 +5518,140 @@ $("detectBtn").addEventListener("click", () => {
   } else {
     toast(`${candidates.length}개 찾았습니다 — 하나씩 눌러 방으로 만드세요`);
   }
+});
+
+/* ============ p51 — 문·창문·콘센트: 벽 눌러 놓기 ============
+   예전엔 숫자 창(벽 시작점에서 거리·경첩·창 아래/위 mm)뿐이라 설명을 읽어야 했다(사용자 지적).
+   이제: 추가 → 종류 → 벽을 누르면 그 자리에 흔한 크기로 → 끌어서 벽 따라 옮김 → 고른 줄에서 방향·바닥까지·숫자로·삭제. */
+const OP_DEF = { door:800, win:1200, out:120 };
+const WIN_SILL = 1000;                   /* 보통 창: 바닥에서 창 아래까지(아파트 900~1000). 거실 창은 바닥까지(0) */
+function startPlacing(kind){
+  if (mode !== "room" || !R()) return toast("방에 먼저 들어가 주세요");
+  closeModals(); closeSheets(); tapeOff();
+  placing = kind; sel = null; opSel = null;
+  placeWinFloor = kind === "win" && /거실/.test(R().name);   /* 사용자: 거실 창은 바닥에 거의 붙어 있다 */
+  refreshAll();
+}
+const opObj = () => {
+  const r = R();
+  const O = r && opSel ? opList(r, opSel.kind).find(o => o.id === opSel.id) : null;
+  if (!O) opSel = null;
+  return O || null;
+};
+/* 누른 곳에서 가장 가까운 벽. 방 안으로 화면 60px, 벽선 바깥으로 40px 까지 — 방 가운데는 «벽 가까이» 를 부탁한다 */
+function placeOpening(m){
+  const r = R(); if (!r || !placing) return;
+  const kind = placing, inn = pxMm(60), out = pxMm(40);
+  let c = null;
+  for (const wall of ["top", "bottom", "left", "right"]){
+    const A = wallAxis(r, wall);
+    const t = (m.x - A.ox) * A.dx + (m.y - A.oy) * A.dy;          /* 벽을 따라 */
+    const dn = (m.x - A.ox) * A.nx + (m.y - A.oy) * A.ny;         /* 방 안쪽이 + */
+    if (dn < -out || dn > inn || t < -out || t > A.len + out) continue;
+    if (!c || Math.abs(dn) < c.d) c = { wall, A, t, d:Math.abs(dn) };
+  }
+  if (!c) return toast("벽 가까이를 눌러 주세요", 2400);
+  const len = c.A.len, w = Math.min(OP_DEF[kind], len);
+  let x0 = clampInt(Math.round(c.t - w / 2), 0, Math.max(0, len - w)), note = "";
+  /* 같은 벽에서 겹치면 가장 가까운 빈 틈으로. 콘센트↔창문은 겹쳐도 된다(창 아래 콘센트는 흔하다) */
+  const segs = [];
+  for (const k of ["door", "win", "out"]){
+    if ((kind === "win" && k === "out") || (kind === "out" && k === "win")) continue;
+    for (const o of opList(r, k)) if (o.wall === c.wall) segs.push(o);
+  }
+  const hit = x => segs.some(s => x < s.x0 + s.w && s.x0 < x + w);
+  if (hit(x0)){
+    const ok = segs.flatMap(s => [s.x0 - w, s.x0 + s.w])
+      .filter(x => x >= 0 && x <= len - w && !hit(x)).sort((a, b) => Math.abs(a - x0) - Math.abs(b - x0));
+    if (ok.length) x0 = Math.round(ok[0]); else note = " — 다른 것과 겹쳐요";
+  }
+  const before = snapshot();
+  let rec;
+  if (kind === "door"){
+    if (!r.doors) r.doors = [];
+    rec = { id:newOid(r.doors, "D"), wall:c.wall, x0, w, hinge: c.t < len / 2 ? "start" : "end", swing:"in" };   /* 가까운 모서리 쪽에 매단다 */
+    r.doors.push(rec);
+  } else if (kind === "win"){
+    if (!r.windows) r.windows = [];
+    rec = { id:newOid(r.windows, "W"), wall:c.wall, x0, w,
+            sill: placeWinFloor ? 0 : Math.min(WIN_SILL, r.ceiling - 100), head:r.ceiling };
+    r.windows.push(rec);
+  } else {
+    if (!r.outlets) r.outlets = [];
+    rec = { id:newOid(r.outlets, "O"), wall:c.wall, x0, w };
+    r.outlets.push(rec);
+  }
+  placing = null; sel = null; opSel = { kind, id:rec.id };
+  commit(before);
+  toast(`${OP_KO[kind]}${kind === "out" ? "를" : "을"} 놓았어요 — 끌어서 옮길 수 있어요${note}`, 2600);
+}
+function startOpDrag(key, m, pt, e){
+  const [kind, id] = String(key).split(":"), r = R();
+  const O = r && opList(r, kind).find(o => o.id === id);
+  if (!O) return startPan(m, pt, e);
+  const A = wallAxis(r, O.wall);
+  flushNudge(); sel = null; opSel = { kind, id };
+  opDrag = { kind, id, before:snapshot(), t0:(m.x - A.ox) * A.dx + (m.y - A.oy) * A.dy, x00:O.x0,
+             sx:pt.x, sy:pt.y, slop:false, moved:false };
+  if (e && e.cancelable) e.preventDefault();
+  bindMove();
+  refreshAll();
+}
+/* 여는 방향 4가지를 차례로: 안·왼(위) → 안·오른(아래) → 밖·오른 → 밖·왼. «경첩» 이라는 말은 쓰지 않는다 */
+const DOOR_CYCLE = [["in", "start"], ["in", "end"], ["out", "end"], ["out", "start"]];   /* 한 번에 하나씩만 바뀐다 */
+function opAction(a){
+  const r = R(), O = opObj(); if (!r || !O) return;
+  const kind = opSel.kind;
+  if (a === "exact") return askOpening(kind, O.id);
+  if (a === "del") return dropOpening(kind, O.id);
+  const before = snapshot();
+  if (a === "flip" && kind === "door"){
+    const i = DOOR_CYCLE.findIndex(s => s[0] === O.swing && s[1] === O.hinge);
+    [O.swing, O.hinge] = DOOR_CYCLE[(i + 1) % 4];
+    toast(O.swing === "in" ? "안으로 열림" : "밖으로 열림");
+  } else if (a === "floor" && kind === "win"){
+    O.sill = O.sill === 0 ? Math.min(WIN_SILL, r.ceiling - 100) : 0;
+    toast(O.sill === 0 ? "바닥까지 창(거실 창)" : `보통 창 — 바닥에서 ${fmt(O.sill)} 위`);
+  } else return;
+  commit(before);
+}
+function opDesc(kind, O){
+  return `${WALL_KO[O.wall]} 벽 · 폭 ${fmt(O.w)}` +
+    (kind === "door" ? ` · ${O.swing === "in" ? "안으로 열림" : "밖으로 열림"}`
+     : kind === "win" ? (O.sill === 0 ? " · 바닥까지" : ` · 바닥+${fmt(O.sill)}`) : "");
+}
+function opBoxHtml(O){
+  const kind = opSel.kind;
+  const b = (a, label, extra) => `<button class="btn" type="button" data-ob="${a}"${extra || ""}>${label}</button>`;
+  return `<div class="read-h"><span>${OP_KO[kind]}</span><em>${escapeHtml(opDesc(kind, O))}</em></div>` +
+    `<p class="selhint">끌어서 벽을 따라 옮길 수 있어요.</p><div class="selacts opacts">` +
+    (kind === "door" ? b("flip", "여는 방향 바꾸기") : "") +
+    (kind === "win" ? b("floor", "바닥까지 창", ` aria-pressed="${O.sill === 0}"`) : "") +
+    b("exact", "숫자로 입력") + b("del", "삭제") + `</div>`;
+}
+function syncPlaceBar(){
+  const on = !!placing && mode === "room";
+  document.body.classList.toggle("placing", on);
+  $("placeBar").hidden = !on;
+  if (!on) return;
+  $("pbText").textContent = `${OP_KO[placing]}${placing === "out" ? "를" : "을"} 놓을 벽을 누르세요`;
+  $("pbWin").hidden = placing !== "win";
+  for (const b of $("pbWin").querySelectorAll("button"))
+    b.setAttribute("aria-pressed", String((b.getAttribute("data-pw") === "1") === placeWinFloor));
+}
+$("pbCancel").addEventListener("click", () => { placing = null; refreshAll(); });
+$("pbWin").addEventListener("click", e => {
+  const b = e.target.closest && e.target.closest("[data-pw]"); if (!b) return;
+  placeWinFloor = b.getAttribute("data-pw") === "1"; syncPlaceBar();
+});
+$("opbar").addEventListener("click", e => {
+  const b = e.target.closest && e.target.closest("[data-ob],#obInfo");
+  if (!b) return;
+  opAction(b.id === "obInfo" ? "exact" : b.getAttribute("data-ob"));
+});
+$("selBox").addEventListener("click", e => {
+  const b = e.target.closest && e.target.closest("[data-ob]");
+  if (b) opAction(b.getAttribute("data-ob"));
 });
 
 
@@ -5854,8 +6110,8 @@ $("apModal").addEventListener("click", e => {
   if (!b) return;
   $("apModal").classList.remove("open");
   const a = b.getAttribute("data-ap");
-  if (a === "out") return askOpening("out", null);          /* p49 */
-  $(a === "door" ? "addDoorBtn" : a === "win" ? "addWinBtn" : "addBtn").click();
+  if (a === "door" || a === "win" || a === "out") return startPlacing(a);    /* p51 — 창 대신 «벽을 누르세요» */
+  $("addBtn").click();
 });
 /* 도면을 건드리면 시트는 비켜 준다 — 시트를 닫으려고 «닫기» 를 찾게 만들지 않는다 */
 $("stage").addEventListener("pointerdown", () => {
@@ -5906,6 +6162,18 @@ function syncPhone(){
     $("selbar").querySelector('[data-sb="dup"]').hidden = it.room === null;      /* p47 — «자리 찾기» 는 뺐다(사용자 요청) */
     $("sbStoreL").textContent = it.room === null ? "꺼내기" : "보관";          /* p46 — 보관함 가구는 «꺼내기» */
   }
+  /* p51 — 고른 문·창문·콘센트 줄(#opbar)과 «벽을 누르세요» 띠 */
+  const op = (mode === "room" && !sel) ? opObj() : null;
+  document.body.classList.toggle("has-op", !!op);
+  if (op){
+    const k = opSel.kind;
+    $("obNm").textContent = OP_KO[k];
+    $("obSz").textContent = opDesc(k, op);
+    $("opbar").querySelector('[data-ob="flip"]').hidden = k !== "door";
+    const fl = $("opbar").querySelector('[data-ob="floor"]');
+    fl.hidden = k !== "win"; fl.setAttribute("aria-pressed", String(k === "win" && op.sill === 0));
+  }
+  syncPlaceBar();
   /* 집 화면의 «목록» 은 가구가 아니라 방이다. 이름이 다르면 눌러 볼 이유가 생긴다. */
   syncTapeFab();
   $("tabAddL").textContent  = mode === "room" ? "추가" : "방 추가";
@@ -6365,8 +6633,8 @@ const GUIDE = [
    d:"첫 화면에서 가로·세로 두 칸이면 방이 생깁니다. 흔한 크기를 누르면 채워지고, 줄자가 없으면 «먼저 둘러보기».",
    img:"guide/01.webp", w:812, h:304 },
  { t:"문·창문·콘센트 놓기",
-   d:"문은 열리는 반경까지 계산합니다. 창문은 «바닥에서 창 아래까지» 높이를 적어야 창을 가리는 가구를 잡아냅니다. 콘센트도 벽에 찍어 두면 가구가 앞을 막을 때 황토색으로 알려 줍니다 — 점수와는 상관없습니다.",
-   img:"guide/02.webp", w:531, h:900 },
+   d:"«추가» 에서 문·창문·콘센트를 고르고 벽을 누르면 그 자리에 생깁니다. 끌면 벽을 따라 옮겨지고, 문은 «방향» 을 누를 때마다 여는 쪽이 바뀝니다. 창문은 «보통 창» 과 바닥까지 내려오는 «거실 창» 중에서 고르세요. 콘센트 앞을 가구가 막으면 황토색으로 알려 줍니다(점수와는 상관없음). 정확한 치수는 «숫자로 입력».",
+   img:"guide/02.webp", w:1040, h:821 },
  { t:"가구 놓기",
    d:"치수를 모르면 «흔한 크기» 에서 고르고 아는 값만 고쳐 쓰세요. 앞 여유는 서랍을 빼거나 의자를 물릴 자리입니다. 기둥·붙박이장·라디에이터처럼 옮길 수 없는 것은 맨 아래 «고정물» 에서 고르세요 — 통로에는 들어가고 추천은 옮기지 않습니다.",
    img:"guide/03.webp", w:417, h:900 },

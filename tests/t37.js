@@ -66,7 +66,7 @@ const APP = 'file://' + (process.env.APP || (process.env.WORK || '/home/claude/w
   chk(await p.$eval('#apModal', e => e.classList.contains('open')) && (await p.$$('#apModal [data-ap]')).length === 4, '«추가» 탭 → 가구·문·창문·콘센트 고르기');   // p49 콘센트 추가
   await p.screenshot({ path:(process.env.WORK || '/home/claude/work') + '/p37_addpick.png' });
   await p.tap('#apModal [data-ap="door"]'); await p.waitForTimeout(500);
-  chk(await p.$eval('#openModal', e => e.classList.contains('open')), '«문» → 문 창');
+  chk(await p.isVisible('#placeBar') && !(await p.$eval('#openModal', e => e.classList.contains('open'))), '«문» → «문을 놓을 벽을 누르세요» 띠');   // p51 — 숫자 창 대신
   await p.keyboard.press('Escape'); await p.waitForTimeout(300);
   await p.tap('#tabbar [data-tab="list"]'); await p.waitForTimeout(400);
   await p.tap('#listIn .fitem .nm:text-is("독서실책상")'); await p.waitForTimeout(500);
