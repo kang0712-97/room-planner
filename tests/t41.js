@@ -79,15 +79,14 @@ const APP = 'file://' + (process.env.APP || (process.env.WORK || '/home/claude/w
   };
   const tap = async q => { await touch([q], 'touchStart'); await p.waitForTimeout(30); await touch([{ x: q.x + 3, y: q.y + 3 }], 'touchMove');
     await p.waitForTimeout(20); await touch([{ x: q.x + 3, y: q.y + 3 }], 'touchEnd'); await p.waitForTimeout(400); };
-  await p.click('#tabbar [data-tab="more"]'); await p.waitForTimeout(400);
-  await p.click('#tapeBtn'); await p.waitForTimeout(300);
-  if (await p.$eval('body', n => [...n.classList].some(k => k.startsWith('sh-')))) { await p.click('#tabbar [data-tab="more"]'); await p.waitForTimeout(400); }
+  await tap(await (async () => { const r = await (await p.$('#tapeFab')).boundingBox(); return { x: r.x + r.width / 2, y: r.y + r.height / 2 }; })());   // p47 — 폰은 도면 왼쪽 위 줄자 단추
+  chk(await p.$eval('#tapeFab', n => n.classList.contains('armed')), '폰: 도면 왼쪽 위 «줄자» 단추로 켬(빨갛게)');
   const f0 = await T(p);
   chk(!!f0 && f0.X.x < 390 && f0.X.y < 844, `폰: 줄자·× 가 화면 안 (× ${Math.round(f0.X.x)},${Math.round(f0.X.y)})`);
   await tdrag({ x: (f0.A.x + f0.B.x) / 2, y: (f0.A.y + f0.B.y) / 2 + 14 }, 20, 90); const f1 = await T(p);
   chk(near(f1.A.y - f0.A.y, 90, 4) && near(f1.len, f0.len, 2), '폰: 손가락으로 줄 옆을 잡아 옮김');
   await tap(f1.X);
-  chk(!(await p.$('#plan g.tape')), '폰: × 를 탭하면 줄자 사라짐(도구 시트 안 열고)');
+  chk(!(await p.$('#plan g.tape')) && !(await p.$eval('#tapeFab', n => n.classList.contains('armed'))), '폰: × 를 탭하면 줄자 사라짐 · 단추도 꺼짐');
   await c.close();
 
   console.log('\npageerror :', errs.length, errs.slice(0, 3));

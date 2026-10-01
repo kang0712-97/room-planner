@@ -23,7 +23,7 @@ const FILE = process.env.APP || WORK + '/app.html', DIR = path.dirname(FILE);
       const info = document.getElementById('sbInfo').getBoundingClientRect();
       return { labels: acts.map(n => n.textContent.trim()), small: acts.filter(n => { const r = n.getBoundingClientRect(); return r.width < 44 || r.height < 44; }).length,
         over: s.scrollWidth > s.clientWidth + 1, right: Math.max(...acts.map(n => n.getBoundingClientRect().right)) <= innerWidth, info: Math.round(info.width), nm: document.getElementById('sbNm').textContent }; });
-    chk(bar.labels.join('·') === '수정·복제·자리 찾기·보관·삭제' && bar.small === 0 && !bar.over && bar.right,
+    chk(bar.labels.join('·') === '수정·복제·보관·삭제' && bar.small === 0 && !bar.over && bar.right,
         `${W}px: 고른 가구 줄 [${bar.labels.join(' · ')}] 44px 이상 · 화면 안 · 이름 칸 ${bar.info}px («${bar.nm}»)`);
     if (W === 360) { chk(bar.info >= 60, `360px 에서도 이름 칸 60px 이상 (${bar.info}px)`); await c.close(); continue; }
     await p.screenshot({ path: WORK + '/p46_selbar.png' });
@@ -61,8 +61,8 @@ const FILE = process.env.APP || WORK + '/app.html', DIR = path.dirname(FILE);
     const p = await c.newPage(); p.on('pageerror', e => { if (!/x-t46/.test(e.message)) errs.push(e.message); });
     await p.goto(base + page); await p.waitForTimeout(800); await fn(p); await p.waitForTimeout(500); await c.close(); return got; };
   const off = await run('/app.html', async p => { await p.click('#isPeek'); await p.waitForTimeout(800); });
-  chk(off.length === 0, `GC 가 비면 아무것도 안 보냄 (${off.length}건)`);
-  const got = await run('/gc.html', async p => {
+  chk(off.length === 0, `시험 서버(127.0.0.1)는 ?gctest 가 없으면 안 보냄 (${off.length}건)`);
+  const got = await run('/gc.html?gctest', async p => {
     await p.click('#isPeek'); await p.waitForTimeout(1300);
     if (await p.$('#guide.open')) { await p.waitForTimeout(100); chk(await p.$eval('.gnote', n => n.textContent.includes('쿠키를 쓰지 않고')), '사용법 창에 측정 안내 한 줄'); await p.keyboard.press('Escape'); }
     await p.click('#addBtn'); await p.waitForTimeout(300);

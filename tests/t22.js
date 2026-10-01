@@ -63,6 +63,9 @@ const chromium = require('playwright')[process.env.BROWSER || 'chromium'];   // 
         if (!e || !e.closest) continue;
         if (e.closest('.fg') || e.closest('.rg') || e.closest('.cand')) continue;
         if (!e.closest('#plan')) continue;
+        /* p47: 도면 위에 뜬 단추(줄자 등) 옆은 피한다 — 손가락 탭은 반경 12px 안의 단추로 빨려 들어간다 */
+        if ([[-20, -20], [20, -20], [-20, 20], [20, 20]].some(([dx, dy]) => { const q = document.elementFromPoint(x + dx, y + dy);
+          return q && !q.closest('#plan'); })) continue;
         return { x, y };
       }
     return null;

@@ -74,7 +74,7 @@ const APP = 'file://' + (process.env.APP || (process.env.WORK || '/home/claude/w
   await p.tap('#tabbar [data-tab="add"]'); await p.waitForTimeout(300); await p.tap('#apModal [data-ap="furn"]'); await p.waitForTimeout(400);
   await p.locator('#afPre button:has-text("기둥")').scrollIntoViewIfNeeded(); await p.tap('#afPre button:has-text("기둥")'); await p.tap('#afAdd'); await p.waitForTimeout(700);
   const vis = await p.$$eval('#selbar .sb-act', ns => ns.filter(n => !n.hidden).map(n => n.textContent.trim()));
-  chk(vis.join() === '수정,복제,보관,삭제', '폰 고정물 고르면 줄: ' + vis.join(' · '));   // p46 — 보관·삭제 되살림(자리 찾기는 고정물이라 숨김)
+  chk(vis.join() === '수정,복제,보관,삭제', '폰 고정물 고르면 줄: ' + vis.join(' · '));   // p47 — 자리 찾기는 이제 모두에게 없음   // p46 — 보관·삭제 되살림(자리 찾기는 고정물이라 숨김)
   await p.tap('#sbInfo'); await p.waitForTimeout(400);
   chk(!(await p.isVisible('#selEdit')) && !(await p.isVisible('#selRot')), '폰 상태 시트: 고른 가구 칸 버튼 없음');
   await p.screenshot({ path:(process.env.WORK || '/home/claude/work') + '/p38_phone.png' });

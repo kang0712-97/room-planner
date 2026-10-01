@@ -71,11 +71,11 @@ const APP = 'file://' + (process.env.APP || (process.env.WORK || '/home/claude/w
   await p.tap('#tabbar [data-tab="list"]'); await p.waitForTimeout(400);
   await p.tap('#listIn .fitem .nm:text-is("독서실책상")'); await p.waitForTimeout(500);
   const acts = await p.$$eval('#selbar .sb-act', ns => ns.filter(n => !n.hidden).map(n => n.textContent.trim() + ':' + Math.round(n.getBoundingClientRect().width) + '×' + Math.round(n.getBoundingClientRect().height)));
-  chk(acts.length === 5 && acts[0].startsWith('수정') && acts[1].startsWith('복제') && acts[2].startsWith('자리 찾기') && acts[3].startsWith('보관') && acts[4].startsWith('삭제'), '고른 가구 줄: ' + acts.join(' '));   // p46 — 사용자 요청으로 보관·삭제 되살림
+  chk(acts.length === 4 && acts[0].startsWith('수정') && acts[1].startsWith('복제') && acts[2].startsWith('보관') && acts[3].startsWith('삭제'), '고른 가구 줄: ' + acts.join(' '));   // p47 — «자리 찾기» 뺌(사용자 요청)   // p46 — 사용자 요청으로 보관·삭제 되살림
   await p.screenshot({ path:(process.env.WORK || '/home/claude/work') + '/p37_selbar.png' });
-  await p.tap('#selbar [data-sb="spot"]'); await p.waitForTimeout(2000);
+  await p.tap('#sbInfo'); await p.waitForTimeout(600); await p.tap('#spotGo').catch(() => {}); await p.waitForTimeout(2000);   // p47 — 이름 → 상태 시트 → «더 나은 자리»
   const sp = await p.evaluate(() => document.getElementById('spotBox').innerText.replace(/\s+/g, ' '));
-  chk(await p.evaluate(() => document.body.classList.contains('sh-stat')) && /점|자리/.test(sp), '«자리 찾기» → 상태 시트에 결과: ' + sp.slice(0, 50));
+  chk(await p.evaluate(() => document.body.classList.contains('sh-stat')) && /점|자리/.test(sp), '이름 → 상태 시트에서 «더 나은 자리»: ' + sp.slice(0, 50));
   await p.screenshot({ path:(process.env.WORK || '/home/claude/work') + '/p37_spot.png' });
   await p.tap('#tabbar [data-tab="stat"]'); await p.waitForTimeout(300);
   await p.tap('#selbar [data-sb="edit"]'); await p.waitForTimeout(500);

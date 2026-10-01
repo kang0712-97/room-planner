@@ -615,6 +615,13 @@ ol.todo li:first-child{color:var(--ink-2);font-weight:500}
 .crumb button{border:none;background:transparent;padding:2px 6px;border-radius:3px;
   color:var(--muted);font-size:13px}
 .crumb button:hover{background:var(--surface-2);color:var(--ink)}
+/* p47 — 방 이름을 누르면 이름·크기 수정. 연필 표시로 «눌러도 된다» 를 알린다 */
+.crumb .crumbroom{font-weight:700;color:var(--ink);display:inline-flex;align-items:center;gap:5px;min-height:32px}
+.crumb .crumbroom::after{content:"";width:13px;height:13px;flex:none;opacity:.55;background:currentColor;
+  -webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 20h4L19 9l-4-4L4 16z'/%3E%3C/svg%3E") center/contain no-repeat;
+          mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 20h4L19 9l-4-4L4 16z'/%3E%3C/svg%3E") center/contain no-repeat}
+/* p47 — 폰 줄자 단추(도면 왼쪽 위). 데스크톱에서는 숨김 */
+.tapefab{display:none}
 .crumb b{font-weight:600}
 .crumb span{color:var(--line-strong)}
 
@@ -811,6 +818,15 @@ ol.todo li:first-child{color:var(--ink-2);font-weight:500}
   .bar .addset{display:none}
   /* p38 — 폰 «상태» 의 고른 가구 칸 버튼은 아래 줄 «수정» 과 겹친다. 폰에서는 뺀다 */
   #selBox .selacts{display:none}
+  .tapefab{position:absolute;left:10px;top:10px;z-index:3;width:48px;height:48px;border-radius:10px;cursor:pointer;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;
+    border:1px solid var(--line);background:var(--surface);color:var(--ink-2);box-shadow:0 4px 14px -8px rgba(0,0,0,.4)}
+  .tapefab[hidden]{display:none}
+  .tapefab .i{width:20px;height:20px}
+  .tapefab span{font-size:9px;line-height:1}
+  .tapefab.armed{background:var(--bad);border-color:var(--bad);color:#fff}
+  #tapeBtn{display:none}
+  .sb-sz{display:none}
   .notebar{top:52px;flex-wrap:wrap;justify-content:flex-end}
   .notebar #nbText{flex:1 1 100%}
   .bar .util{display:flex !important;flex-wrap:wrap;gap:8px}
@@ -876,7 +892,7 @@ ol.todo li:first-child{color:var(--ink-2);font-weight:500}
 }
 /* 이름·규격을 누르면 «상태» 시트가 열린다 — 자세한 값은 거기 다 있다.
    한 줄에 다 적으려 들면 결국 화면을 또 먹는다. */
-.sb-info{flex:1;min-width:0;display:flex;flex-direction:column;align-items:flex-start;gap:1px;
+.sb-info{flex:1;min-width:0;display:flex;flex-direction:column;align-items:flex-start;justify-content:center;align-self:stretch;min-height:44px;gap:1px;
   border:0;background:none;padding:2px 2px;cursor:pointer;text-align:left;font:inherit;color:inherit}
 .sb-nm{font-size:13px;font-weight:600;color:var(--ink);
   max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -956,7 +972,7 @@ ol.todo li:first-child{color:var(--ink-2);font-weight:500}
     <div class="crumb">
       <button id="goHome"><svg class="i" viewBox="0 0 24 24"><use href="#ic-home"/></svg><span>집 전체</span></button>
       <span id="crumbSep" hidden>›</span>
-      <b id="crumbRoom" hidden></b>
+      <button type="button" id="crumbRoom" class="crumbroom" title="방 이름·크기 수정" aria-label="방 이름·크기 수정" hidden></button>
     </div>
 
     <!-- 집 전체 화면 도구 -->
@@ -1148,6 +1164,8 @@ ol.todo li:first-child{color:var(--ink-2);font-weight:500}
         <p class="drawer-f">불러오면 지금 배치를 덮어씁니다. 되돌리기로 복구할 수 있습니다.</p>
       </div>
 
+      <!-- p47 — 폰: 줄자는 «도구» 시트 속이 아니라 도면 왼쪽 위에 바로(엄지로 닿고 도면을 덜 가린다). 데스크톱은 툴바 그대로 -->
+      <button type="button" class="tapefab" id="tapeFab" title="줄자" aria-label="줄자" aria-pressed="false" hidden><svg class="i" viewBox="0 0 24 24"><use href="#ic-tape"/></svg><span>줄자</span></button>
       <div class="zoomer">
         <button id="zIn" title="확대" aria-label="확대">+</button>
         <button id="zOut" title="축소" aria-label="축소">−</button>
@@ -1227,7 +1245,6 @@ ol.todo li:first-child{color:var(--ink-2);font-weight:500}
   </button>
   <button type="button" class="sb-act" data-sb="edit" aria-label="이름·치수 수정"><svg class="i" viewBox="0 0 24 24"><use href="#ic-edit"/></svg><span>수정</span></button>
   <button type="button" class="sb-act" data-sb="dup" aria-label="복제"><svg class="i" viewBox="0 0 24 24"><use href="#ic-copy"/></svg><span>복제</span></button>
-  <button type="button" class="sb-act" data-sb="spot" aria-label="더 나은 자리 찾기"><svg class="i" viewBox="0 0 24 24"><use href="#ic-score"/></svg><span>자리 찾기</span></button>
   <!-- p46 — 사용자 요청: 고른 가구 줄에서 바로 보관·삭제(p37 에 수정 창 안으로 옮겼던 것을 되살림) -->
   <button type="button" class="sb-act" data-sb="store" aria-label="보관함에 넣기"><svg class="i" viewBox="0 0 24 24"><use href="#ic-box"/></svg><span id="sbStoreL">보관</span></button>
   <button type="button" class="sb-act danger" data-sb="del" aria-label="삭제"><svg class="i" viewBox="0 0 24 24"><use href="#ic-trash"/></svg><span>삭제</span></button>
@@ -1588,7 +1605,7 @@ const ROOM_PRESETS = [
 ];
 
 /* 화면에 찍히는 판 번호. 실기에서 «고쳤는데 그대로다» 를 가르는 유일한 단서다. */
-const BUILD = "2026-09-30 · p46";
+const BUILD = "2026-10-01 · p47";
 
 const KEYOPT = "room-planner/opt";
 let opt = { score:true, walk:true, unit:"mm", guide:0 };
@@ -2027,6 +2044,7 @@ function tapeOff(){
   tape = null; tapeDrag = null;
   const b = document.getElementById("tapeBtn");
   if (b){ b.classList.remove("armed"); const lb = b.querySelector("span"); if (lb) lb.textContent = "줄자"; }
+  if (typeof syncTapeFab === "function") syncTapeFab();
 }
 /* p41 — 무엇을 잡았는지 «모양» 으로 정한다(예전엔 눌린 요소로 정해서 두 가지가 불편했다).
    ① 줄 위를 정확히 눌러야만 옮겨졌다 — 이제 줄 양옆 26px 띠와 빨간 길이 글자 칸도 «옮기기».
@@ -2403,11 +2421,11 @@ function hitDrawer(cx, cy){
   const r = drawer.getBoundingClientRect();
   return cx >= r.left && cx <= r.right && cy >= r.top && cy <= r.bottom;
 }
-document.getElementById("drawerBtn").addEventListener("click", () => setDrawer(!drawerOpen));
+document.getElementById("drawerBtn").addEventListener("click", () => { closeSheets(); setDrawer(!drawerOpen); });   /* p47 — 폰 «도구» 시트가 창을 가리지 않게 */
 document.getElementById("drawerClose").addEventListener("click", () => setDrawer(false));
 document.getElementById("layBtn").addEventListener("click", () => {
   if (mode !== "room") return toast("방에 들어가서 쓰는 기능입니다");
-  setLayDrawer(!layOpen);
+  closeSheets(); setLayDrawer(!layOpen);
 });
 document.getElementById("layClose").addEventListener("click", () => setLayDrawer(false));
 
@@ -2475,6 +2493,12 @@ function startPan(m, pt, e){
 
 function onDown(e){
   if (e.button !== undefined && e.button !== 0) return;
+  /* p47 — 보관함·배치 창이 열려 있을 때 바깥 도면을 누르면 창만 닫는다(그 누름은 다른 일을 하지 않는다) */
+  if ((drawerOpen || layOpen) && !(e.touches && e.touches.length > 1)){
+    setDrawer(false); setLayDrawer(false);
+    if (e.cancelable) e.preventDefault();
+    return;
+  }
   if (e.pointerId !== undefined) pts.set(e.pointerId, { x:e.clientX, y:e.clientY });
   const list = touchList(e);
   if (list.length >= 2){ startPinch(list[0], list[1]); bindMove(); if (e.cancelable) e.preventDefault(); return; }
@@ -5511,6 +5535,9 @@ $("scoreBtn").addEventListener("click", () => {
                   : "점수를 껐습니다 — 통로·겹침 표시는 그대로입니다");
   refreshAll();
 });
+/* p47 — 폰 줄자 단추: 도구 시트의 «줄자» 와 같은 일. 켜져 있으면 빨갛게 */
+function syncTapeFab(){ const f = $("tapeFab"); f.hidden = mode !== "room"; f.classList.toggle("armed", !!tape); f.setAttribute("aria-pressed", String(!!tape)); }
+$("tapeFab").addEventListener("click", () => { closeSheets(); $("tapeBtn").click(); syncTapeFab(); });
 $("tapeBtn").addEventListener("click", () => {
   const b = $("tapeBtn"), lb = b.querySelector("span");
   if (tape){
@@ -5782,11 +5809,11 @@ function syncPhone(){
     $("sbSz").textContent = it.room === null
       ? `보관함 · ${fmt(sp.w)} × ${fmt(sp.d)}`
       : `${fmt(f.w)} × ${fmt(f.d)} · ${it.rot}°`;
-    for (const a of ["dup", "spot"]) $("selbar").querySelector(`[data-sb="${a}"]`).hidden = it.room === null;
-    if (sp.fixed) $("selbar").querySelector('[data-sb="spot"]').hidden = true;
+    $("selbar").querySelector('[data-sb="dup"]').hidden = it.room === null;      /* p47 — «자리 찾기» 는 뺐다(사용자 요청) */
     $("sbStoreL").textContent = it.room === null ? "꺼내기" : "보관";          /* p46 — 보관함 가구는 «꺼내기» */
   }
   /* 집 화면의 «목록» 은 가구가 아니라 방이다. 이름이 다르면 눌러 볼 이유가 생긴다. */
+  syncTapeFab();
   $("tabAddL").textContent  = mode === "room" ? "추가" : "방 추가";
   $("tabListL").textContent = mode === "room" ? "목록" : "방 목록";
 }
@@ -6196,9 +6223,9 @@ $("installBtn").addEventListener("click", () => {
    보내는 것: 들어온 페이지(보통 / · 홈 화면 앱이면 /앱), 판 번호, 들어온 곳(referrer), 화면 크기,
    그리고 이벤트 이름 여섯(방 만들기·가구 추가·링크 보내기·링크로 받음·백업·홈 화면 설치)과 오류 문구(한 세션 6개까지).
    ⚠️ 방·가구·배치·도면은 절대 보내지 않는다. GC 가 비어 있거나 https(또는 127.0.0.1 시험 서버)가 아니면 아무것도 안 보낸다. */
-const GC = "";                    /* build.py 가 GoatCounter 코드로 바꾼다(pwa/goatcounter.txt). 없으면 빈 문자열 */
+const GC = "eodidaduji";                    /* build.py 가 GoatCounter 코드로 바꾼다(pwa/goatcounter.txt). 없으면 빈 문자열 */
 function gcSend(params){
-  if (!GC || GC.startsWith("__") || !(location.protocol === "https:" || location.hostname === "127.0.0.1")) return;
+  if (!GC || GC.startsWith("__") || !(location.protocol === "https:" || (location.hostname === "127.0.0.1" && /[?&]gctest\b/.test(location.search)))) return;   /* p47 — 시험 서버는 ?gctest 일 때만(실제 통계를 더럽히지 않게) */
   try {
     const q = new URLSearchParams(Object.assign({ rnd: Math.random().toString(36).slice(2, 8) }, params));
     const u = `https://${GC}.goatcounter.com/count?` + q.toString();
@@ -6218,6 +6245,12 @@ function trackErr(m){
 }
 window.addEventListener("error", e => trackErr(e && e.message));
 window.addEventListener("unhandledrejection", e => trackErr(e && e.reason && (e.reason.message || e.reason)));
+
+/* p47 — 방 안에서 방 이름을 누르면 이름·크기·천장 수정(예전엔 집 화면 방 목록에서만 됐다). 삭제는 집 화면에서만 */
+$("crumbRoom").addEventListener("click", () => {
+  if (mode !== "room" || !curRoom) return;
+  closeSheets(); askRoom(curRoom); $("rmDrop").hidden = true;
+});
 
 function bootNotes(){
   let ok = false; try { ok = sessionStorage.getItem("room-planner/inapp-ok") === "1"; } catch(e){}
