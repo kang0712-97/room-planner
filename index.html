@@ -2703,6 +2703,8 @@ function onMove(e){
     return;
   }
   if (opDrag){                                  /* p51 — 벽을 따라서만 */
+    /* 잡은 손가락만 따라간다 — 손 떼기 신호를 놓친 채 다른 단추(되돌리기 등)를 누르면 그 손가락을 따라 문이 끌려갔다(Actions 에서 실제로 봄) */
+    if (opDrag.pid !== undefined && e.pointerId !== undefined && e.pointerId !== opDrag.pid) return;
     if (e.cancelable) e.preventDefault();
     if (!past(opDrag, pt)) return;            // 아직 «누르고만» 있다 — 떼면 고르기
     const r = R(), O = r && opList(r, opDrag.kind).find(o => o.id === opDrag.id);
@@ -2816,7 +2818,7 @@ function bindMove(){
   }
 }
 function unbindMove(){
-  if (drag || pan || pinch || roomDrag || traceRect || tapeDrag) return;
+  if (drag || pan || pinch || roomDrag || traceRect || tapeDrag || opDrag) return;
   window.removeEventListener("pointermove", onMove);
   window.removeEventListener("pointerup", onUp);
   window.removeEventListener("pointercancel", onUp);
@@ -5592,7 +5594,7 @@ function startOpDrag(key, m, pt, e){
   const A = wallAxis(r, O.wall);
   flushNudge(); sel = null; opSel = { kind, id };
   opDrag = { kind, id, before:snapshot(), t0:(m.x - A.ox) * A.dx + (m.y - A.oy) * A.dy, x00:O.x0,
-             sx:pt.x, sy:pt.y, slop:false, moved:false };
+             sx:pt.x, sy:pt.y, slop:false, moved:false, pid: e ? e.pointerId : undefined };
   if (e && e.cancelable) e.preventDefault();
   bindMove();
   refreshAll();

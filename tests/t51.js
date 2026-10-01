@@ -125,7 +125,7 @@ const FILE = process.env.APP || WORK + '/app.html', APP = 'file://' + FILE;
   r = await room(p); const d3 = r.doors[0];
   chk(d3.wall === 'top' && d3.x0 < d0.x0 - 200, '끌기: 위쪽 벽 따라 왼쪽으로 200 넘게(아래로 끌어도 벽 그대로)');
   chk(kept, '끄는 동안 도면 통째로 안 그림(가구 노드 그대로)');
-  await tp('touchStart', g.X(d3.x0 + 400), sy); for (let i = 1; i <= 8; i++) await tp('touchMove', g.X(d3.x0 + 400) + i * 60, sy);
+  await tp('touchStart', g.X(d3.x0 + 400), sy); for (let i = 1; i <= 8; i++) { await tp('touchMove', g.X(d3.x0 + 400) + i * 25, sy); await p.waitForTimeout(16); }   // 화면 안에서만(밖으로 나가면 서버 크롬은 손 떼기를 안 보냈다)
   await tp('touchEnd', 0, 0); await p.waitForTimeout(400);
   const d4 = (await room(p)).doors[0];
   chk(d4.x0 + d4.w === g.r.w, `벽 끝에서 멈춤 (${d4.x0}+${d4.w} = ${g.r.w})`);
