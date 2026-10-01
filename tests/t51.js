@@ -130,7 +130,8 @@ const FILE = process.env.APP || WORK + '/app.html', APP = 'file://' + FILE;
   const d4 = (await room(p)).doors[0];
   chk(d4.x0 + d4.w === g.r.w, `벽 끝에서 멈춤 (${d4.x0}+${d4.w} = ${g.r.w})`);
   await tap(p, '#undoBtn');
-  chk((await room(p)).doors[0].x0 === d3.x0, '끌기도 되돌리기 한 번');
+  { const u = await room(p), ok1 = u.doors[0].x0 === d3.x0;     // 실패할 때만 값을 적는다(기대 출력은 그대로)
+    chk(ok1, '끌기도 되돌리기 한 번' + (ok1 ? '' : ` — 처음 ${d0.x0} · 끌기1 ${d3.x0} · 끌기2 ${d4.x0} · 되돌린 뒤 ${u.doors[0].x0} · 문 ${u.doors.length} · 콘센트 ${u.outlets.map(o => o.wall + o.x0).join(',')} · 배율 ${g.k.toFixed(4)}`)); }
 
   /* 숫자로 입력 — 쉬운 말 · 거리 비우면 막힘 */
   await tapAt(p, g.X(d3.x0 + 400), sy);
