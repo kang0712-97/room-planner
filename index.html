@@ -247,9 +247,7 @@ kbd{font-family:"IBM Plex Mono",monospace;font-size:10.5px;border:1px solid var(
 #plan .ophandle{cursor:ew-resize}
 #plan .ghostband:not(.clash){animation:ghostPulse 1.1s ease-in-out infinite alternate}
 @keyframes ghostPulse{from{stroke-opacity:.25}to{stroke-opacity:.6}}
-#plan .placewall{animation:placeMarch 2.4s linear infinite}
-@keyframes placeMarch{to{stroke-dashoffset:-280}}
-@media(prefers-reduced-motion:reduce){#plan .ghostband,#plan .placewall{animation:none}}
+@media(prefers-reduced-motion:reduce){#plan .ghostband{animation:none}}
 .placebar .btn{min-height:44px;justify-content:center;pointer-events:auto;padding:0 12px}
 .pbwin{display:flex;gap:6px}
 .pbwin .btn[aria-pressed="true"]{background:var(--accent-soft);border-color:var(--accent);color:var(--accent-ink);font-weight:600}
@@ -1662,7 +1660,7 @@ const ROOM_PRESETS = [
 ];
 
 /* 화면에 찍히는 판 번호. 실기에서 «고쳤는데 그대로다» 를 가르는 유일한 단서다. */
-const BUILD = "2026-10-02 · p54";
+const BUILD = "2026-10-02 · p55";
 
 const KEYOPT = "room-planner/opt";
 let opt = { score:true, walk:true, unit:"mm", guide:0 };
@@ -2331,15 +2329,10 @@ function drawRoom(){
 
   /* p53 — 콘센트를 놓는 중엔 벽을 따라 얇은 파란 띠(바깥 14px ~ 안쪽 22px)를 칠하고 벽선을 따라 점선이 흐른다.
      누르면 인정되는 범위(placeOpening: 바깥 40px ~ 안쪽 60px)를 그대로 칠했더니 좁은 방은 거의 다 파래져 «벽» 이 안 보였다. 초록 벽 강조(p51)는 초록이 많은 도면에서 안 보였다(갤럭시). 문·창문은 미리보기 하나만 눈에 띄게 강조를 뺐다 */
+  /* p55 — 띠·흐르는 점선은 «형광칠 같다», p54 의 옅은 점선은 «너무 옅다»(갤럭시) → 띠 없이 벽선만 진한 파랑 실선으로 덮는다 */
   if (placing === "out"){
-    const zo = pxMm(14), zi = pxMm(22);
-    const outer = `M${-zo},${-zo}H${r.w + zo}V${r.d + zo}H${-zo}Z`;
-    const inner = (r.w > 2 * zi && r.d > 2 * zi) ? `M${zi},${zi}V${r.d - zi}H${r.w - zi}V${zi}Z` : "";
-    svg.appendChild(el("path", { class:"placezone", d:outer + inner, "fill-rule":"evenodd",
-      fill:"var(--preview)", "fill-opacity":.08, "pointer-events":"none" }));
-    /* p54 — 띠 .22·점선 4px 는 «너무 선명해서 보기 안 좋다»(갤럭시) → 띠 .08, 점선 2px·반투명 */
     svg.appendChild(el("rect", { class:"placewall", x:0, y:0, width:r.w, height:r.d, fill:"none",
-      stroke:"var(--preview)", "stroke-width":Math.max(16, pxMm(2)), "stroke-opacity":.55, "stroke-dasharray":"70 70", "pointer-events":"none" }));
+      stroke:"var(--preview)", "stroke-width":Math.max(26, pxMm(4)), "pointer-events":"none" }));
   }
   /* 벽선을 그린 뒤라야 개구부가 벽을 끊어 보인다 · p51 — 한 묶음(#opLayer)이라 끄는 동안 이것만 다시 그린다 */
   const opG = el("g", { id:"opLayer" }); svg.appendChild(opG); fillOpLayer(opG);
