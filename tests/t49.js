@@ -17,23 +17,22 @@ const FILE = process.env.APP || WORK + '/app.html', APP = 'file://' + FILE;
       return { name:c.name, x0:i.x, y0:i.y, x1:i.x + fw, y1:i.y + fd }; }); };
   const hit = (a, q) => a.x0 < q.x1 - 1 && q.x0 + 1 < a.x1 && a.y0 < q.y1 - 1 && q.y0 + 1 < a.y1;
   const panelText = p => p.$eval('#clashBox', n => { const c = n.cloneNode(true); const o = c.querySelector('#outInfo'); if (o) o.remove(); return c.textContent; });
-  /* p51 — 추가는 «벽을 누르세요» → 벽 가운데를 누르고 → «숫자로 입력» 에서 정확한 자리 */
-  const wallMid = (p, wall) => p.evaluate(w => { const b = document.querySelector('#plan > rect').getBoundingClientRect();
-    return { top:[b.x + b.width / 2, b.y + 3], bottom:[b.x + b.width / 2, b.y + b.height - 3], left:[b.x + 3, b.y + b.height / 2], right:[b.x + b.width - 3, b.y + b.height / 2] }[w]; }, wall);
+  /* p52 — 콘센트는 숫자 창이 없다: «콘센트 추가» → 그 자리(가운데 = x0 + 60)를 벽 안쪽 3px 에서 누른다. 화면 1px 만큼 흔들리므로 판정은 ±15mm */
+  const wallAt = (p, wall, t) => p.evaluate(([w, t]) => { const s = JSON.parse(localStorage.getItem('room-planner/3')).rooms[0];
+    const b = document.querySelector('#plan > rect').getBoundingClientRect(), k = b.width / s.w;
+    return { top:[b.x + t * k, b.y + 3], bottom:[b.x + t * k, b.y + b.height - 3], left:[b.x + 3, b.y + t * k], right:[b.x + b.width - 3, b.y + t * k] }[w]; }, [wall, t]);
   const addOutlet = async (p, wall, x0, btn) => {
     await p.click(btn); await p.waitForTimeout(250);
-    const q = await wallMid(p, wall); await p.mouse.click(q[0], q[1]); await p.waitForTimeout(400);
-    await p.click('#selBox [data-ob="exact"]'); await p.waitForTimeout(250);
-    await p.click(`#opWall [data-wall="${wall}"]`); await p.fill('#opX', String(x0));
-    await p.click('#opSave'); await p.waitForTimeout(400);
+    const q = await wallAt(p, wall, x0 + 60); await p.mouse.click(q[0], q[1]); await p.waitForTimeout(400);
   };
+  const near = (a, b) => Math.abs(a - b) <= 15;
 
   const c = await b.newContext({ viewport: { width: 1600, height: 1000 } });
   const p = await c.newPage(); p.on('pageerror', e => errs.push(e.message));
   await p.goto(APP); await p.waitForTimeout(700); await p.click('#isPeek'); await p.waitForTimeout(1300);
   if (await p.$('#guide.open')) { await p.keyboard.press('Escape'); await p.waitForTimeout(300); }
   const ver = await p.$eval('#introVer', n => n.textContent);
-  chk(+(ver.match(/p(\d+)/) || [0, 0])[1] >= 49, '판 번호 p49 이상 (' + ver + ')');
+  chk(+(ver.match(/p(\d+)/) || [0, 0])[1] >= 49, '판 번호 p49 이상');
 
   let s = await st(p), r = s.rooms[0];
   chk((r.outlets || []).length === 0 && !(await p.$('#plan rect.outlet')), '샘플 방: 콘센트 없음');
@@ -43,10 +42,10 @@ const FILE = process.env.APP || WORK + '/app.html', APP = 'file://' + FILE;
   /* 빈 자리(앞에 가구 없음)와 가구가 막는 자리를 앱 바깥 셈으로 고른다 */
   const R0 = rects(s); let free = null, blocked = null;
   for (const wall of ['top', 'left', 'right', 'bottom']) {
-    for (let x = 0; x + 120 <= span(r, wall) && !free; x += 50)
-      if (!R0.some(q => hit(q, band(r, wall, x, 120)))) free = { wall, x };
-    for (let x = 0; x + 120 <= span(r, wall) && !blocked; x += 50) {
-      const by = R0.filter(q => hit(q, band(r, wall, x, 120)));
+    for (let x = 20; x + 140 <= span(r, wall) && !free; x += 50)          // p52 — 누른 자리가 ±15mm 흔들려도 같은 판정이 되게 ±20 여유
+      if (![-20, 0, 20].some(e => R0.some(q => hit(q, band(r, wall, x + e, 120))))) free = { wall, x };
+    for (let x = 0; x + 140 <= span(r, wall) && !blocked; x += 50) {
+      const by = R0.filter(q => hit(q, band(r, wall, x, 120)) && hit(q, band(r, wall, x + 20, 120)));
       if (by.length === 1) blocked = { wall, x, name:by[0].name };
     }
   }
@@ -59,17 +58,22 @@ const FILE = process.env.APP || WORK + '/app.html', APP = 'file://' + FILE;
   await addOutlet(p, free.wall, free.x, '#addOutBtn2');
   s = await st(p); r = s.rooms[0];
   const o1 = (r.outlets || [])[0];
-  chk(r.outlets.length === 1 && o1.wall === free.wall && o1.x0 === free.x && o1.w === 120 && o1.id === 'O1', `저장: ${JSON.stringify(o1)}`);
+  chk(r.outlets.length === 1 && o1.wall === free.wall && near(o1.x0, free.x) && o1.w === 120 && o1.id === 'O1', `누른 자리에 저장: O1 · ${o1.wall} · 폭 120`);
   chk((await p.$$('#plan rect.outlet')).length === 1 && !(await p.$('#plan rect.outlet.blk')), '도면: 콘센트 판 1 · 가려짐 아님');
   chk(!(await p.$('#outInfo')) && (await p.$$('#openList .opitem.out')).length === 1, '상태 패널에 «가려짐» 없음 · 목록에 콘센트 1');
   chk(await panelText(p) === before, '빈 자리 콘센트 → 상태·점수 글자 그대로');
 
-  await p.click('#openList .opitem.out [data-act="edit"]'); await p.waitForTimeout(250);
-  chk(await p.$eval('#opTitle', n => n.textContent) === '콘센트 수정', '목록에서 수정 → «콘센트 수정»');
-  await p.click(`#opWall [data-wall="${blocked.wall}"]`); await p.fill('#opX', String(blocked.x));
-  await p.click('#opSave'); await p.waitForTimeout(400);
+  await p.click('#openList .opitem.out'); await p.waitForTimeout(300);
+  chk(!(await p.$eval('#openModal', n => n.classList.contains('open'))) && (await p.textContent('#selBox')).includes('콘센트')
+      && !(await p.$('#openList .opitem.out [data-act="edit"]')), '목록에서 콘센트를 누르면 도면에서 고름(수정 창·수정 단추 없음)');   // p52
+  /* 끌어서 막힌 자리로(같은 벽) — 벽 바깥 8px 를 잡는다 */
+  const g1 = await wallAt(p, o1.wall, o1.x0 + 60), g2 = await wallAt(p, blocked.wall, blocked.x + 60);
+  const out8 = { top:[0, -11], bottom:[0, 11], left:[-11, 0], right:[11, 0] }[o1.wall];
+  await p.mouse.move(g1[0] + out8[0], g1[1] + out8[1]); await p.mouse.down();
+  for (let i = 1; i <= 10; i++) await p.mouse.move(g1[0] + out8[0] + (g2[0] - g1[0]) * i / 10, g1[1] + out8[1] + (g2[1] - g1[1]) * i / 10);
+  await p.mouse.up(); await p.waitForTimeout(400);
   s = await st(p); r = s.rooms[0];
-  chk(r.outlets.length === 1 && r.outlets[0].wall === blocked.wall && r.outlets[0].x0 === blocked.x, '수정 → 같은 콘센트가 옮겨짐(1개)');
+  chk(blocked.wall === o1.wall && r.outlets.length === 1 && r.outlets[0].wall === blocked.wall && near(r.outlets[0].x0, blocked.x), '끌어서 → 같은 콘센트가 옮겨짐(1개)');
   chk((await p.$$('#plan rect.outlet.blk')).length === 1, '도면: 가려진 콘센트는 황토색(.blk)');
   const info = await p.$eval('#outInfo', n => n.textContent).catch(() => '');
   chk(info.includes('콘센트 가려짐') && info.includes(blocked.name) && info.includes('점수와는 상관없어요'), `상태 패널: «${info.slice(0, 60)}…»`);
@@ -79,10 +83,10 @@ const FILE = process.env.APP || WORK + '/app.html', APP = 'file://' + FILE;
 
   await p.click('#undoBtn'); await p.waitForTimeout(400);
   r = (await st(p)).rooms[0];
-  chk(r.outlets[0].wall === free.wall && r.outlets[0].x0 === free.x && !(await p.$('#outInfo')), '되돌리기 한 번 → 빈 자리로');
+  chk(r.outlets[0].wall === free.wall && r.outlets[0].x0 === o1.x0 && !(await p.$('#outInfo')), '되돌리기 한 번 → 빈 자리로');
 
-  /* 방 줄이기: 위쪽 벽 오른쪽 끝 콘센트가 벽 안으로 따라온다 */
-  await addOutlet(p, 'top', r.w - 120, '#addOutBtn2');
+  /* 방 줄이기: 아래쪽 벽 오른쪽 끝 콘센트가 벽 안으로 따라온다(위쪽 끝엔 문이 있어 p51 부터 빈 틈으로 밀린다) */
+  await addOutlet(p, 'bottom', r.w - 120, '#addOutBtn2');
   await p.click('#crumbRoom'); await p.waitForTimeout(300);
   await p.fill('#rmW', '2000'); await p.click('#rmSave'); await p.waitForTimeout(400);
   r = (await st(p)).rooms[0];
@@ -99,14 +103,14 @@ const FILE = process.env.APP || WORK + '/app.html', APP = 'file://' + FILE;
   await p.evaluate(() => { const u = document.getElementById('utilBar'); if (u) u.classList.add('open'); });
   await p.click('#shareBtn'); await p.waitForTimeout(500);
   const url = await p.inputValue('#shUrl');
-  chk(/#r=/.test(url), `링크 만들어짐 (# 뒤 ${url.split('#')[1].length}자)`);
+  chk(/#r=/.test(url), '링크 만들어짐');   // p52 — 길이는 콘센트 자리(누른 곳)에 따라 몇 자 달라진다
   const c2 = await b.newContext({ viewport: { width: 1600, height: 1000 } });
   const q = await c2.newPage(); q.on('pageerror', e => errs.push(e.message));
   await q.goto(url); await q.waitForTimeout(1200);
   await q.click('#cfOk'); await q.waitForTimeout(600);
   const s2 = await st(q), got = s2.rooms[s2.rooms.length - 1];
   chk(JSON.stringify(got.outlets.map(o => [o.wall, o.x0, o.w])) === JSON.stringify(r.outlets.map(o => [o.wall, o.x0, o.w])),
-      `받은 방에 콘센트 그대로 ${JSON.stringify(got.outlets.map(o => [o.wall, o.x0, o.w]))}`);
+      `받은 방에 콘센트 그대로 ${got.outlets.length}개`);
   await c2.close();
   await p.click('#shClose'); await p.waitForTimeout(200);
 
