@@ -54,6 +54,13 @@ const FILE = process.env.APP || WORK + '/app.html', APP = 'file://' + FILE;
   const ob = await p.$$eval('#opbar .sb-act', ns => ns.filter(n => !n.hidden).map(n => n.textContent.trim() + ':' + Math.round(n.getBoundingClientRect().width) + '×' + Math.round(n.getBoundingClientRect().height)));
   chk(ob.length === 4 && ob[0].startsWith('안·밖') && ob[1].startsWith('반대쪽') && ob[2].startsWith('수정') && ob.every(s => /:4\d×4\d$/.test(s)), '문 줄 단추 44px: ' + ob.join(' '));
 
+  /* 자가 감수 A — 고른 문의 몸통(25% 지점)을 잡고 끌면 옮겨진다(폭이 바뀌면 안 된다) */
+  { const a = (await room(p)).doors[0];
+    await swipe(g.X(a.x0 + a.w * 0.25), g.Y(0) - 8, -5, 0, 8);
+    const b2 = (await room(p)).doors[0];
+    chk(b2.w === a.w && b2.x0 < a.x0, '고른 문 몸통 25% 를 끌면 옮겨짐 · 폭 그대로');
+    await tap(p, '#undoBtn'); }
+
   /* 안·밖, 반대쪽 — 하나씩 */
   const h0 = r.doors[0].hinge;
   await tap(p, '#opbar [data-ob="swing"]');
@@ -84,6 +91,13 @@ const FILE = process.env.APP || WORK + '/app.html', APP = 'file://' + FILE;
   await tap(p, '#tabbar [data-tab="add"]'); await tap(p, '#apModal [data-ap="door"]');
   const gb = await p.$eval('#plan .ghost', n => { const b = n.getBoundingClientRect(); return { x:b.x, w:b.width }; });
   chk(gb.x < g.X(0) + 20, '두 번째 문 미리보기는 비어 있는 왼쪽 벽에서 시작');
+  /* 자가 감수 C — 첫 문 위로 끌어 겹치면 빨간 띠·안내, 비키면 사라짐 */
+  { const a = (await room(p)).doors[0];
+    await p.touchscreen.tap(g.X(a.x0 + a.w / 2), g.Y(0) + 3); await p.waitForTimeout(300);
+    const bad = await p.$eval('#pbHint', n => n.classList.contains('bad') && n.textContent.includes('겹쳐요'));
+    chk(bad && await p.$$eval('#plan .opsel.clash', n => n.length) === 1, '미리보기가 다른 문과 겹치면 빨간 띠 · «다른 문·창과 겹쳐요»');
+    await p.touchscreen.tap(g.X(0) + 3, g.Y(1800)); await p.waitForTimeout(300);
+    chk(!(await p.$eval('#pbHint', n => n.classList.contains('bad'))), '비키면 안내가 원래대로'); }
   await tap(p, '#pbGo');
   chk((await room(p)).doors.length === 2 && (await room(p)).doors[1].wall === 'left', '«놓기» → 왼쪽 벽 문');
   await tap(p, '#opbar [data-ob="del"]'); await tap(p, '#cfOk');
@@ -170,6 +184,17 @@ const FILE = process.env.APP || WORK + '/app.html', APP = 'file://' + FILE;
   await p.fill('#opX', ''); await p.tap('#opSave'); await p.waitForTimeout(300);
   chk(await p.$eval('#openModal', n => n.classList.contains('open')) && (await p.textContent('#toast')).includes('위쪽 벽에서 몇 mm'), '거리를 비우면 저장 안 하고 알려 줌');
   await p.tap('#opCancel'); await p.waitForTimeout(200);
+
+  /* 자가 감수 B — 좁은 방: 1200 창 미리보기를 짧은 벽(1000)에 댔다가 긴 벽으로 → 1200 으로 되살아남 */
+  await p.tap('#crumbRoom'); await p.waitForTimeout(300); await p.fill('#rmW', '1000'); await p.tap('#rmSave'); await p.waitForTimeout(500);
+  g = await geo(p);
+  await tap(p, '#tabbar [data-tab="add"]'); await tap(p, '#apModal [data-ap="win"]');
+  await p.touchscreen.tap(g.X(500), g.Y(0) + 3); await p.waitForTimeout(250);
+  await p.touchscreen.tap(g.X(0) + 3, g.Y(1800)); await p.waitForTimeout(250);
+  await tap(p, '#pbGo');
+  { const ws = (await room(p)).windows, wl = ws[ws.length - 1];
+    chk(wl.wall === 'left' && wl.w === 1200, '좁은 방: 짧은 벽을 지나도 미리보기 폭 1200 그대로'); }
+  await tap(p, '#undoBtn'); await tap(p, '#undoBtn');
 
   /* 집으로 나가면 놓기 끝 */
   await tap(p, '#tabbar [data-tab="add"]'); await tap(p, '#apModal [data-ap="door"]');

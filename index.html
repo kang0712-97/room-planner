@@ -243,6 +243,7 @@ kbd{font-family:"IBM Plex Mono",monospace;font-size:10.5px;border:1px solid var(
   box-shadow:0 6px 18px -10px rgba(0,0,0,.45);max-width:min(340px, calc(100% - 32px))}
 .placebar #pbText{flex-basis:100%;text-align:center;font-weight:600;color:var(--accent-ink);font-size:14px}
 .placebar #pbHint{flex-basis:100%;text-align:center;color:var(--muted);font-size:12px;margin-top:-4px}
+.placebar #pbHint.bad{color:var(--bad);font-weight:600}
 #plan .ophandle{cursor:ew-resize}
 .placebar .btn{min-height:44px;justify-content:center;pointer-events:auto;padding:0 12px}
 .pbwin{display:flex;gap:6px}
@@ -2792,6 +2793,7 @@ function onUp(e){
   if (opDrag){
     const od = opDrag; opDrag = null;
     if (od.moved && od.before) commit(od.before);          /* 미리보기는 기록하지 않는다 — «놓기» 때 한 번 */
+    if (od.mode === "end" && !od.moved && od.id === "ghost") ghostTo(od.m0);   /* 미리보기 끝 바깥을 «누르기만» = 거기로 옮기기 */
     unbindMove(); refreshAll(); return;
   }
   if (drag){
@@ -3665,6 +3667,7 @@ function drawOpenings(){
       svg.appendChild(el("circle", { cx:cx + (hz ? s * L * 0.2 : 0), cy:cy + (hz ? 0 : s * L * 0.2), r:10, fill:col }));
     opHit(r, A, O, "out");
   }
+  const hq = opHandleQ; opHandleQ = []; for (const f of hq) f();
 }
 
 /* ============ p51 — 개구부 고르기·끌기 ============
@@ -3691,8 +3694,14 @@ function opDone(r, A, O, kind, g0){
     const g = el("g", { class:"ghost", opacity:.7, "pointer-events":"none" });
     g.replaceChildren(...[...svg.childNodes].slice(g0));
     svg.appendChild(g);
+    /* 다른 문·창(콘센트↔창은 허용)과 겹치면 빨간 띠 + 안내 — p51 의 «빈 틈으로 밀기» 대신 보여 주고 고르게 한다 */
+    const clash = ["door", "win"].some(k => opList(r, k).some(o => o.wall === O.wall && O.x0 < o.x0 + o.w && o.x0 < O.x0 + O.w));
+    const hint = $("pbHint");
+    if (hint){ hint.classList.toggle("bad", clash);
+      hint.textContent = clash ? "다른 문·창과 겹쳐요 — 끌어서 옮겨 주세요"
+        : kind === "win" ? "거실 창은 바닥까지 · 양 끝 점을 끌면 폭" : "양 끝 점을 끌면 폭이 바뀌어요"; }
     const q0 = wallPt(A, O.x0), q1 = wallPt(A, O.x0 + O.w);              /* 옅기만 하면 안 보인다 — 고른 것처럼 초록 띠 */
-    svg.appendChild(el("line", { class:"opsel", x1:q0.x, y1:q0.y, x2:q1.x, y2:q1.y, stroke:"var(--accent)",
+    svg.appendChild(el("line", { class:"opsel" + (clash ? " clash" : ""), x1:q0.x, y1:q0.y, x2:q1.x, y2:q1.y, stroke: clash ? "var(--bad)" : "var(--accent)",
       "stroke-width":Math.max(90, pxMm(11)), "stroke-opacity":.4, "stroke-linecap":"round", "pointer-events":"none" }));
     opHandles(A, O, "ghost");
     return;
@@ -3700,13 +3709,17 @@ function opDone(r, A, O, kind, g0){
   opHit(r, A, O, kind);
   if (opSel && opSel.kind === kind && opSel.id === O.id) opHandles(A, O, kind + ":" + O.id);
 }
-/* 양 끝 손잡이 — 보이는 점은 작게, 잡히는 자리는 손가락만큼(44px). 끌면 길이가 바뀐다 */
-function opHandles(A, O, key){
-  for (const [end, t] of [["a", O.x0], ["b", O.x0 + O.w]]){
-    const p = wallPt(A, t);
+/* 양 끝 손잡이 — 보이는 점은 끝에, 잡히는 자리(지름 36px)는 끝에서 «바깥쪽» 으로 14px 비켜 둔다.
+   끝에 그대로 두었더니 폰에서 72px 짜리 문은 몸통 대부분이 손잡이라, 옮기려고 잡으면 폭이 바뀌었다(자가 감수). */
+let opHandleQ = [];          /* 손잡이는 drawOpenings 맨 끝에 — 뒤에 그려진 콘센트 판정선이 손잡이를 덮었다(자가 감수) */
+function opHandles(A, O, key){ opHandleQ.push(() => opHandlesNow(A, O, key)); }
+function opHandlesNow(A, O, key){
+  const off = pxMm(14), rr = pxMm(18);
+  for (const [end, t, s] of [["a", O.x0, -1], ["b", O.x0 + O.w, 1]]){
+    const p = wallPt(A, t), q = wallPt(A, t + s * off);
     svg.appendChild(el("circle", { class:"ophandle-dot", cx:p.x, cy:p.y, r:pxMm(8),
       fill:"var(--surface)", stroke:"var(--accent)", "stroke-width":pxMm(3), "pointer-events":"none" }));
-    svg.appendChild(el("circle", { class:"ophandle", "data-op":key, "data-end":end, cx:p.x, cy:p.y, r:pxMm(22),
+    svg.appendChild(el("circle", { class:"ophandle", "data-op":key, "data-end":end, cx:q.x, cy:q.y, r:rr,
       fill:"transparent", "pointer-events":"all" }));
   }
 }
@@ -5594,8 +5607,9 @@ function ghostDefault(kind){
 }
 function ghostRec(kind, wall, x0, w){
   const r = R();
-  return kind === "door" ? { __g:true, kind, id:"ghost", wall, x0, w, hinge:"start", swing:"in" }
-       : { __g:true, kind, id:"ghost", wall, x0, w, sill: placeWinFloor ? 0 : Math.min(WIN_SILL, r.ceiling - 100), head:r.ceiling };
+  const wPref = OP_DEF[kind];          /* 짧은 벽을 지나며 줄어든 폭을 긴 벽에서 되살리려고 «원하는 폭» 을 따로 둔다 */
+  return kind === "door" ? { __g:true, kind, id:"ghost", wall, x0, w, wPref, hinge:"start", swing:"in" }
+       : { __g:true, kind, id:"ghost", wall, x0, w, wPref, sill: placeWinFloor ? 0 : Math.min(WIN_SILL, r.ceiling - 100), head:r.ceiling };
 }
 /* 미리보기를 손가락에서 가장 가까운 벽으로 — 거리 제한 없음(아직 놓은 게 아니다) */
 function ghostTo(m){
@@ -5607,7 +5621,7 @@ function ghostTo(m){
     const qx = A.ox + A.dx * tc, qy = A.oy + A.dy * tc, d = Math.hypot(m.x - qx, m.y - qy);
     if (!best || d < best.d) best = { wall, A, t, d };
   }
-  const w = Math.min(ghost.w, best.A.len);
+  const w = Math.min(ghost.wPref || ghost.w, best.A.len);
   ghost.wall = best.wall; ghost.w = w;
   ghost.x0 = clampInt(Math.round((best.t - w / 2) / 10) * 10, 0, Math.max(0, best.A.len - w));
 }
@@ -5624,7 +5638,9 @@ function startOpEnd(key, end, m, pt, e){
   const O = isG ? ghost : r && opList(r, kind).find(o => o.id === id);
   if (!O) return startPan(m, pt, e);
   if (!isG){ flushNudge(); sel = null; opSel = { kind, id }; }
-  opDrag = { mode:"end", kind, id, end, O, x0:O.x0, x1:O.x0 + O.w, before: isG ? null : snapshot(),
+  const A0 = wallAxis(r, O.wall);
+  opDrag = { mode:"end", kind, id, end, O, x0:O.x0, x1:O.x0 + O.w, before: isG ? null : snapshot(), m0:m,
+             t0:(m.x - A0.ox) * A0.dx + (m.y - A0.oy) * A0.dy,
              sx:pt.x, sy:pt.y, slop:false, moved:false, pid: e ? e.pointerId : undefined };
   if (e && e.cancelable) e.preventDefault();
   bindMove();
@@ -5632,9 +5648,11 @@ function startOpEnd(key, end, m, pt, e){
 }
 function opEndMove(m){
   const d = opDrag, r = R(), O = d.O, A = wallAxis(r, O.wall);
-  const t = Math.round(((m.x - A.ox) * A.dx + (m.y - A.oy) * A.dy) / 10) * 10, min = d.kind === "door" ? 300 : 200;
-  if (d.end === "a"){ O.x0 = clampInt(t, 0, d.x1 - min); O.w = d.x1 - O.x0; }
-  else { O.w = clampInt(t - d.x0, min, A.len - d.x0); }
+  /* 잡은 곳에서 움직인 만큼만 — 손잡이 판정이 끝에서 바깥으로 비켜 있어 절대 위치를 쓰면 잡는 순간 폭이 튀었다 */
+  const dt = Math.round(((m.x - A.ox) * A.dx + (m.y - A.oy) * A.dy - d.t0) / 10) * 10, min = d.kind === "door" ? 300 : 200;
+  if (d.end === "a"){ O.x0 = clampInt(d.x0 + dt, 0, d.x1 - min); O.w = d.x1 - O.x0; }
+  else { O.w = clampInt(d.x1 - d.x0 + dt, min, A.len - d.x0); }
+  if (O.__g) O.wPref = O.w;                 /* 미리보기에서 손으로 맞춘 폭이 새 «원하는 폭» */
 }
 /* «놓기» — 미리보기를 진짜로. 되돌리기 한 번 */
 function confirmPlacing(){
@@ -5761,7 +5779,6 @@ function syncPlaceBar(){
   for (const b of $("pbWin").querySelectorAll("button"))
     b.setAttribute("aria-pressed", String((b.getAttribute("data-pw") === "1") === placeWinFloor));
   if (ghost && ghost.kind === "door") $("pbSwing").textContent = ghost.swing === "in" ? "안으로" : "밖으로";
-  $("pbHint").textContent = placing === "win" ? "거실 창은 바닥까지 · 양 끝 점을 끌면 폭" : "양 끝 점을 끌면 폭이 바뀌어요";
 }
 $("pbCancel").addEventListener("click", () => { placing = null; ghost = null; refreshAll(); });
 $("pbGo").addEventListener("click", confirmPlacing);
