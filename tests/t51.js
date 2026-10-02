@@ -39,6 +39,8 @@ const FILE = process.env.APP || WORK + '/app.html', APP = 'file://' + FILE;
       '추가 → 문: 숫자 창 없이 «문을 끌어 자리를 잡고 «놓기»»');
   chk(await p.$$eval('#plan .ghost', n => n.length) === 1 && await p.$$eval('#plan .ophandle', n => n.length) === 2 && (await room(p)).doors.length === 0,
       '반투명 문 미리보기 + 양 끝 손잡이 · 아직 저장 안 됨');
+  chk(await p.$$eval('#plan .ghost line, #plan .ghost path', ns => ns.some(n => n.getAttribute('stroke') === 'var(--preview)')) && !(await p.$('#plan .placezone')),
+      'p53 — 미리보기는 파란색(--preview) · 문을 놓을 땐 벽 띠 없음');
   await tapAt(p, g.X(2200), g.Y(0) + 4);
   chk((await room(p)).doors.length === 0, '벽을 눌러도 미리보기만 그리로 옮겨짐(저장 안 됨)');
   await tap(p, '#pbDoor [data-pd="swing"]');
@@ -71,6 +73,11 @@ const FILE = process.env.APP || WORK + '/app.html', APP = 'file://' + FILE;
   dd = (await room(p)).doors[0];
   chk(dd.swing === 'in' && dd.hinge !== h0, '«반대쪽» → 매달린 쪽만 바뀜');
   await tap(p, '#opbar [data-ob="hinge"]');
+
+  /* p53 — 콘센트를 놓는 중엔 벽을 따라 파란 띠 + 흐르는 점선 */
+  await tap(p, '#tabbar [data-tab="add"]'); await tap(p, '#apModal [data-ap="out"]');
+  chk(await p.$('#plan .placezone') && await p.$eval('#plan .placewall', n => n.getAttribute('stroke') === 'var(--preview)'), '콘센트 놓는 중: 벽 따라 파란 띠·점선');
+  await tap(p, '#pbCancel');
 
   /* 가장 가까운 벽 — 콘센트로 네 벽 */
   const walls = [];

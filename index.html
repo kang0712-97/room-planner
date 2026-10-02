@@ -33,7 +33,7 @@
   --line:#D5DED9; --line-strong:#7A8D84;
   --accent:#0D6552; --accent-soft:#DFEDE8; --accent-ink:#0A4E3F;
   --measure:#AE4E24; --measure-soft:#F8E9E0;
-  --lock:#7A6A2E; --lock-soft:#F4EFDC;
+  --lock:#7A6A2E; --lock-soft:#F4EFDC; --preview:#1D6FE0; --preview-soft:#E3EEFF;
   --bad:#C0392B; --bad-soft:#FBE7E4;
   --tabh:58px; --crumbh:44px;
 }
@@ -44,7 +44,7 @@
     --line:#26332E; --line-strong:#3D4F48;
     --accent:#4CC3A3; --accent-soft:#12312A; --accent-ink:#7EDBC1;
     --measure:#E39366; --measure-soft:#2F2016;
-    --lock:#D2B764; --lock-soft:#2C2614;
+    --lock:#D2B764; --lock-soft:#2C2614; --preview:#6AA6FF; --preview-soft:#14233A;
     --bad:#F1705E; --bad-soft:#331915;
   }
 }
@@ -54,7 +54,7 @@
   --line:#26332E; --line-strong:#3D4F48;
   --accent:#4CC3A3; --accent-soft:#12312A; --accent-ink:#7EDBC1;
   --measure:#E39366; --measure-soft:#2F2016;
-  --lock:#D2B764; --lock-soft:#2C2614;
+  --lock:#D2B764; --lock-soft:#2C2614; --preview:#6AA6FF; --preview-soft:#14233A;
   --bad:#F1705E; --bad-soft:#331915;
 }
 
@@ -239,12 +239,17 @@ kbd{font-family:"IBM Plex Mono",monospace;font-size:10.5px;border:1px solid var(
    띠 자체는 누름을 통과시킨다(글자 위를 눌러도 그 아래 벽에 놓인다). 단추만 받는다 */
 .placebar{position:absolute;left:16px;top:16px;z-index:6;pointer-events:none;
   display:flex;flex-wrap:wrap;gap:6px;align-items:center;justify-content:center;
-  background:var(--surface);border:1.5px solid var(--accent);border-radius:12px;padding:8px 10px;
+  background:var(--surface);border:2px solid var(--preview);border-radius:12px;padding:8px 10px;
   box-shadow:0 6px 18px -10px rgba(0,0,0,.45);max-width:min(340px, calc(100% - 32px))}
-.placebar #pbText{flex-basis:100%;text-align:center;font-weight:600;color:var(--accent-ink);font-size:14px}
+.placebar #pbText{flex-basis:100%;text-align:center;font-weight:600;color:var(--preview);font-size:14px}
 .placebar #pbHint{flex-basis:100%;text-align:center;color:var(--muted);font-size:12px;margin-top:-4px}
 .placebar #pbHint.bad{color:var(--bad);font-weight:600}
 #plan .ophandle{cursor:ew-resize}
+#plan .ghostband:not(.clash){animation:ghostPulse 1.1s ease-in-out infinite alternate}
+@keyframes ghostPulse{from{stroke-opacity:.25}to{stroke-opacity:.6}}
+#plan .placewall{animation:placeMarch 1.2s linear infinite}
+@keyframes placeMarch{to{stroke-dashoffset:-210}}
+@media(prefers-reduced-motion:reduce){#plan .ghostband,#plan .placewall{animation:none}}
 .placebar .btn{min-height:44px;justify-content:center;pointer-events:auto;padding:0 12px}
 .pbwin{display:flex;gap:6px}
 .pbwin .btn[aria-pressed="true"]{background:var(--accent-soft);border-color:var(--accent);color:var(--accent-ink);font-weight:600}
@@ -1657,7 +1662,7 @@ const ROOM_PRESETS = [
 ];
 
 /* 화면에 찍히는 판 번호. 실기에서 «고쳤는데 그대로다» 를 가르는 유일한 단서다. */
-const BUILD = "2026-10-02 · p52";
+const BUILD = "2026-10-02 · p53";
 
 const KEYOPT = "room-planner/opt";
 let opt = { score:true, walk:true, unit:"mm", guide:0 };
@@ -2324,9 +2329,17 @@ function drawRoom(){
   svg.appendChild(el("rect", { x:0, y:0, width:r.w, height:r.d, fill:"none",
     stroke:"var(--ink)", "stroke-width":26 }));
 
-  /* p51 — 놓는 중엔 네 벽을 초록으로 — «여기를 누르라» 가 글보다 먼저 보인다 */
-  if (placing) svg.appendChild(el("rect", { class:"placewall", x:0, y:0, width:r.w, height:r.d, fill:"none",
-    stroke:"var(--accent)", "stroke-width":Math.max(60, pxMm(7)), "stroke-opacity":.5, "pointer-events":"none" }));
+  /* p53 — 콘센트를 놓는 중엔 벽을 따라 얇은 파란 띠(바깥 14px ~ 안쪽 22px)를 칠하고 벽선을 따라 점선이 흐른다.
+     누르면 인정되는 범위(placeOpening: 바깥 40px ~ 안쪽 60px)를 그대로 칠했더니 좁은 방은 거의 다 파래져 «벽» 이 안 보였다. 초록 벽 강조(p51)는 초록이 많은 도면에서 안 보였다(갤럭시). 문·창문은 미리보기 하나만 눈에 띄게 강조를 뺐다 */
+  if (placing === "out"){
+    const zo = pxMm(14), zi = pxMm(22);
+    const outer = `M${-zo},${-zo}H${r.w + zo}V${r.d + zo}H${-zo}Z`;
+    const inner = (r.w > 2 * zi && r.d > 2 * zi) ? `M${zi},${zi}V${r.d - zi}H${r.w - zi}V${zi}Z` : "";
+    svg.appendChild(el("path", { class:"placezone", d:outer + inner, "fill-rule":"evenodd",
+      fill:"var(--preview)", "fill-opacity":.22, "pointer-events":"none" }));
+    svg.appendChild(el("rect", { class:"placewall", x:0, y:0, width:r.w, height:r.d, fill:"none",
+      stroke:"var(--preview)", "stroke-width":Math.max(36, pxMm(4)), "stroke-dasharray":"120 90", "pointer-events":"none" }));
+  }
   /* 벽선을 그린 뒤라야 개구부가 벽을 끊어 보인다 · p51 — 한 묶음(#opLayer)이라 끄는 동안 이것만 다시 그린다 */
   const opG = el("g", { id:"opLayer" }); svg.appendChild(opG); fillOpLayer(opG);
   asDyn(drawClearance);
@@ -3577,10 +3590,10 @@ function drawOpenings(){
     const A = wallAxis(r, D.wall);
     const p0 = wallPt(A, D.x0), p1 = wallPt(A, D.x0 + D.w);
     const S = doorSector(r, D);
-    const col = D.__g ? "var(--accent-ink)" : hit.has(D.id) ? "var(--bad)" : "var(--measure)";
+    const col = D.__g ? "var(--preview)" : hit.has(D.id) ? "var(--bad)" : "var(--measure)";
 
     if (S){
-      svg.appendChild(el("path", { d:sectorPath(S), fill:"url(#hz)",
+      svg.appendChild(el("path", { d:sectorPath(S), fill: D.__g ? "var(--preview-soft)" : "url(#hz)",
         stroke:col, "stroke-width":8, "stroke-dasharray":"40 26" }));
       /* 문짝 — 열린 위치에 실선으로 */
       svg.appendChild(el("line", { x1:S.x, y1:S.y,
@@ -3610,6 +3623,7 @@ function drawOpenings(){
      그래서 창에도 창다운 그림을 준다: 방 안으로 퍼지는 «빛». 뜻도 맞고 눈에도 띈다. */
   for (const W of withGhost(r.windows, "win")){
     const g0 = svg.childNodes.length;
+    const wc = W.__g ? "var(--preview)" : "var(--accent)", wci = W.__g ? "var(--preview)" : "var(--accent-ink)";   /* p53 — 미리보기는 파랑 */
     const A = wallAxis(r, W.wall);
     const p0 = wallPt(A, W.x0), p1 = wallPt(A, W.x0 + W.w);
     const mx = (p0.x + p1.x) / 2, my = (p0.y + p1.y) / 2;
@@ -3632,21 +3646,21 @@ function drawOpenings(){
     const b0 = band(-24), b1 = band(24);
     svg.appendChild(el("polygon", {
       points:`${b0[0]},${b0[1]} ${b0[2]},${b0[3]} ${b1[2]},${b1[3]} ${b1[0]},${b1[1]}`,
-      fill:"var(--accent)", "fill-opacity":.22, stroke:"none" }));
+      fill:wc, "fill-opacity":.22, stroke:"none" }));
     for (const k of [-24, 24]){
       const q = band(k);
       svg.appendChild(el("line", { x1:q[0], y1:q[1], x2:q[2], y2:q[3],
-        stroke:"var(--accent)", "stroke-width":17 }));
+        stroke:wc, "stroke-width":17 }));
     }
     svg.appendChild(el("line", { x1:p0.x, y1:p0.y, x2:p1.x, y2:p1.y,
-      stroke:"var(--accent)", "stroke-width":9, "stroke-opacity":.6 }));
+      stroke:wc, "stroke-width":9, "stroke-opacity":.6 }));
     /* 양 끝 마구리 — 창이 «어디서 어디까지» 인지가 문보다 훨씬 덜 분명했다 */
     for (const q of [p0, p1])
       svg.appendChild(el("line", { x1:q.x - A.nx*32, y1:q.y - A.ny*32,
         x2:q.x + A.nx*32, y2:q.y + A.ny*32,
-        stroke:"var(--accent-ink)", "stroke-width":13 }));
+        stroke:wci, "stroke-width":13 }));
 
-    labelOutside(A, mx, my, "var(--accent-ink)",
+    labelOutside(A, mx, my, wci,
       W.sill === 0 ? `창 ${fmt(W.w)} · 바닥까지` : `창 ${fmt(W.w)} · 바닥+${fmt(W.sill)}`);
     opDone(r, A, W, "win", g0);
   }
@@ -3691,7 +3705,7 @@ function opHit(r, A, O, kind){
 const withGhost = (list, kind) => (list || []).concat(ghost && ghost.kind === kind ? [ghost] : []);
 function opDone(r, A, O, kind, g0){
   if (O.__g){
-    const g = el("g", { class:"ghost", opacity:.7, "pointer-events":"none" });
+    const g = el("g", { class:"ghost", "pointer-events":"none" });          /* p53 — 옅게(.7) 하지 않는다. 색으로 구분한다 */
     g.replaceChildren(...[...svg.childNodes].slice(g0));
     svg.appendChild(g);
     /* 다른 문·창(콘센트↔창은 허용)과 겹치면 빨간 띠 + 안내 — p51 의 «빈 틈으로 밀기» 대신 보여 주고 고르게 한다 */
@@ -3701,7 +3715,7 @@ function opDone(r, A, O, kind, g0){
       hint.textContent = clash ? "다른 문·창과 겹쳐요 — 끌어서 옮겨 주세요"
         : kind === "win" ? "거실 창은 바닥까지 · 양 끝 점을 끌면 폭" : "양 끝 점을 끌면 폭이 바뀌어요"; }
     const q0 = wallPt(A, O.x0), q1 = wallPt(A, O.x0 + O.w);              /* 옅기만 하면 안 보인다 — 고른 것처럼 초록 띠 */
-    svg.appendChild(el("line", { class:"opsel" + (clash ? " clash" : ""), x1:q0.x, y1:q0.y, x2:q1.x, y2:q1.y, stroke: clash ? "var(--bad)" : "var(--accent)",
+    svg.appendChild(el("line", { class:"opsel ghostband" + (clash ? " clash" : ""), x1:q0.x, y1:q0.y, x2:q1.x, y2:q1.y, stroke: clash ? "var(--bad)" : "var(--preview)",
       "stroke-width":Math.max(90, pxMm(11)), "stroke-opacity":.4, "stroke-linecap":"round", "pointer-events":"none" }));
     opHandles(A, O, "ghost");
     return;
@@ -3714,11 +3728,11 @@ function opDone(r, A, O, kind, g0){
 let opHandleQ = [];          /* 손잡이는 drawOpenings 맨 끝에 — 뒤에 그려진 콘센트 판정선이 손잡이를 덮었다(자가 감수) */
 function opHandles(A, O, key){ opHandleQ.push(() => opHandlesNow(A, O, key)); }
 function opHandlesNow(A, O, key){
-  const off = pxMm(14), rr = pxMm(18);
+  const off = pxMm(14), rr = pxMm(18), hc = key === "ghost" ? "var(--preview)" : "var(--accent)";
   for (const [end, t, s] of [["a", O.x0, -1], ["b", O.x0 + O.w, 1]]){
     const p = wallPt(A, t), q = wallPt(A, t + s * off);
     svg.appendChild(el("circle", { class:"ophandle-dot", cx:p.x, cy:p.y, r:pxMm(8),
-      fill:"var(--surface)", stroke:"var(--accent)", "stroke-width":pxMm(3), "pointer-events":"none" }));
+      fill:"var(--surface)", stroke:hc, "stroke-width":pxMm(3), "pointer-events":"none" }));
     svg.appendChild(el("circle", { class:"ophandle", "data-op":key, "data-end":end, cx:q.x, cy:q.y, r:rr,
       fill:"transparent", "pointer-events":"all" }));
   }

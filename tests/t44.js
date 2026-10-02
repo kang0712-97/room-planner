@@ -9,7 +9,7 @@ const FILE = process.env.APP || WORK + '/app.html', APP = 'file://' + FILE;
   const html = fs.readFileSync(FILE, 'utf8');
   const files = fs.readdirSync(path.join(path.dirname(FILE), 'guide')).filter(f => /^\d\d\.webp$/.test(f));
   const inside = files.filter(f => html.includes(fs.readFileSync(path.join(path.dirname(FILE), 'guide', f)).toString('base64').slice(0, 200)));
-  chk(Buffer.byteLength(html) < 420000 && inside.length === 0, `완성본 420KB 미만 — 사용법 그림은 안에 없음(${inside.length})`);
+  chk(Buffer.byteLength(html) < 500000 && inside.length === 0, `완성본 500KB 미만 — 사용법 그림은 안에 없음(${inside.length})`);   // p53 — 420KB 에 닿아 올림(사용자 결정 2026-10-02). 뜻은 그대로: 그림이 다시 안에 들어오면 수백 KB 가 늘어 걸린다
   chk(files.length === 11, `guide/ 폴더 그림 ${files.length}장`);
 
   const c = await b.newContext({ viewport: { width: 1600, height: 900 } }); const p = await c.newPage();
