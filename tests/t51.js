@@ -43,8 +43,9 @@ const FILE = process.env.APP || WORK + '/app.html', APP = 'file://' + FILE;
       'p53 — 미리보기는 파란색(--preview) · 문을 놓을 땐 벽 띠 없음');
   await tapAt(p, g.X(2200), g.Y(0) + 4);
   chk((await room(p)).doors.length === 0, '벽을 눌러도 미리보기만 그리로 옮겨짐(저장 안 됨)');
+  chk((await p.textContent('#pbSwing')) === '밖으로', 'p54 — 안으로 열린 미리보기: 단추는 «밖으로»(누르면 될 쪽)');
   await tap(p, '#pbDoor [data-pd="swing"]');
-  chk((await p.textContent('#pbSwing')) === '밖으로' && (await room(p)).doors.length === 0, '띠 «안으로» → «밖으로» — 미리보기만 바뀜');
+  chk((await p.textContent('#pbSwing')) === '안으로' && (await room(p)).doors.length === 0, '«밖으로» 누름 → 단추 «안으로» — 미리보기만 바뀜');
   await tap(p, '#pbDoor [data-pd="swing"]');
   await tap(p, '#pbGo');
   let r = await room(p);
@@ -54,7 +55,7 @@ const FILE = process.env.APP || WORK + '/app.html', APP = 'file://' + FILE;
   chk(await p.isVisible('#opbar') && !(await p.isVisible('#selbar')) && await p.$eval('#placeBar', n => n.hidden) && !(await p.$('#plan .ghost')), '놓은 뒤: 띠·미리보기 사라짐 · 문 줄(#opbar)');
   chk((await p.textContent('#obSz')).includes('위쪽 벽 · 폭 800 · 안으로 열림'), '문 줄 설명: ' + await p.textContent('#obSz'));
   const ob = await p.$$eval('#opbar .sb-act', ns => ns.filter(n => !n.hidden).map(n => n.textContent.trim() + ':' + Math.round(n.getBoundingClientRect().width) + '×' + Math.round(n.getBoundingClientRect().height)));
-  chk(ob.length === 4 && ob[0].startsWith('안·밖') && ob[1].startsWith('반대쪽') && ob[2].startsWith('수정') && ob.every(s => /:4\d×4\d$/.test(s)), '문 줄 단추 44px: ' + ob.join(' '));
+  chk(ob.length === 4 && ob[0].startsWith('밖으로') && ob[1].startsWith('반대쪽') && ob[2].startsWith('수정') && ob.every(s => /:4\d×4\d$/.test(s)), '문 줄 단추 44px: ' + ob.join(' '));
 
   /* 자가 감수 A — 고른 문의 몸통(25% 지점)을 잡고 끌면 옮겨진다(폭이 바뀌면 안 된다) */
   { const a = (await room(p)).doors[0];
@@ -67,7 +68,7 @@ const FILE = process.env.APP || WORK + '/app.html', APP = 'file://' + FILE;
   const h0 = r.doors[0].hinge;
   await tap(p, '#opbar [data-ob="swing"]');
   let dd = (await room(p)).doors[0];
-  chk(dd.swing === 'out' && dd.hinge === h0, '«안·밖» → 밖으로(매달린 쪽 그대로)');
+  chk(dd.swing === 'out' && dd.hinge === h0 && (await p.textContent('#obSwingL')) === '안으로', '«밖으로» → 밖으로 열림(매달린 쪽 그대로) · 단추 «안으로»');
   chk(await p.$$eval('#plan #opLayer path', ns => ns.some(n => n.getAttribute('stroke-opacity') === '0.45')), '밖여닫이: 방 바깥 옅은 점선');
   await tap(p, '#opbar [data-ob="swing"]'); await tap(p, '#opbar [data-ob="hinge"]');
   dd = (await room(p)).doors[0];
