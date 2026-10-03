@@ -6,7 +6,7 @@ const chromium = require('playwright')[process.env.BROWSER || 'chromium'];   // 
     const p = await b.newPage({ viewport: { width: W, height: 950 } });
     p.on('pageerror', e => errs.push(W + ': ' + e));
     await p.goto('file://' + (process.env.APP || (process.env.WORK || '/home/claude/work') + '/app.html'));
-    await p.click('#houseBtn'); await p.waitForTimeout(1500);
+    await p.keyboard.press('Escape'); await p.waitForTimeout(1500);
   if (await p.$('#guide.open')) { await p.click('#gClose'); await p.waitForTimeout(400); }
     await p.click('#roomList .roomcard .nm'); await p.waitForTimeout(300);
     console.log(`툴바 ${W}px :`, await p.$eval('.bar', n => Math.round(n.getBoundingClientRect().height)), 'px');

@@ -74,7 +74,7 @@ const chromium = require('playwright')[process.env.BROWSER || 'chromium'];   // 
   await p.goto('file://' + (process.env.APP22 || process.env.APP || (process.env.WORK || '/home/claude/work') + '/app22.html'));
   await p.waitForTimeout(800);
   console.log('판 번호 :', await T('#introVer'));
-  await p.click('#houseBtn'); await p.waitForTimeout(1500);
+  await p.keyboard.press('Escape'); await p.waitForTimeout(1500);
   if (await p.$('#guide.open')) { await p.click('#gClose'); await p.waitForTimeout(400); }
   await p.waitForTimeout(300);
 

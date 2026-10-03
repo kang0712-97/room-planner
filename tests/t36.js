@@ -59,7 +59,7 @@ const APP = 'file://' + (process.env.APP || (process.env.WORK || '/home/claude/w
   await p.click('#afCancel');
   // 보관함 가구도 수정
   await p.reload(); await p.waitForTimeout(900);
-  if (await p.$('#intro:not([hidden])')) { await p.click('#houseBtn').catch(()=>{}); await p.waitForTimeout(1200); }
+  if (await p.$('#intro:not([hidden])')) { await p.keyboard.press('Escape'); await p.waitForTimeout(1200); }
   await p.screenshot({ path:(process.env.WORK || '/home/claude/work') + '/p36_desk.png' });
   await c.close();
   // 폰

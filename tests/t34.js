@@ -7,7 +7,7 @@ const APP = 'file://' + (process.env.APP || (process.env.WORK || '/home/claude/w
   const c = await b.newContext({ viewport:{ width:1600, height:900 } }); const p = await c.newPage();
   p.on('pageerror', e => errs.push(e.message));
   await p.goto(APP); await p.waitForTimeout(800);
-  await p.fill('#isW', '2000'); await p.fill('#isD', '1500'); await p.click('#isGo'); await p.waitForTimeout(1300);
+  await p.fill('#isW', '2000'); await p.fill('#isD', '1500'); await p.click('#isGo'); await p.waitForTimeout(1300); await p.locator('#plan .rg').last().click(); await p.waitForTimeout(1300);
   if (await p.$('#guide.open')) { await p.keyboard.press('Escape'); await p.waitForTimeout(300); }
   const add = async nm => { await p.click('#addBtn'); await p.waitForTimeout(300); await p.click(`#afPre button:has-text("${nm}")`); await p.click('#afAdd'); await p.waitForTimeout(500); return p.textContent('#toast'); };
   const inside = () => p.evaluate(() => { const r = document.querySelector('#plan rect'); const W = +r.getAttribute('width'), H = +r.getAttribute('height');

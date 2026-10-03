@@ -17,7 +17,7 @@ const APP = 'file://' + (process.env.APP || (process.env.WORK || '/home/claude/w
   let c = await b.newContext({ viewport:{ width:412, height:880 }, isMobile:true, hasTouch:true, deviceScaleFactor:2 });
   let p = await c.newPage(); const errs = []; p.on('pageerror', e => errs.push(e.message));
   await p.goto(APP); await p.waitForTimeout(900);
-  await p.fill('#isW', '2000'); await p.fill('#isD', '1500'); await p.tap('#isGo'); await p.waitForTimeout(1500);
+  await p.fill('#isW', '2000'); await p.fill('#isD', '1500'); await p.tap('#isGo'); await p.waitForTimeout(1300); await p.locator('#plan .rg').last().tap(); await p.waitForTimeout(1500);
   if (await p.$('#guide.open')) { await p.keyboard.press('Escape'); await p.waitForTimeout(300); }
   console.log('[①] 빈 방 2000×1500');
   chk(await p.$$eval('#plan .walkband', e => e.length) === 0, '통로 표시 없음');
@@ -37,7 +37,7 @@ const APP = 'file://' + (process.env.APP || (process.env.WORK || '/home/claude/w
     c = await b.newContext(mob ? { viewport:{ width:W, height:H }, isMobile:true, hasTouch:true, deviceScaleFactor:2 } : { viewport:{ width:W, height:H } });
     p = await c.newPage(); p.on('pageerror', e => errs.push(e.message));
     await p.goto(APP); await p.waitForTimeout(800);
-    await (mob ? p.tap('#houseBtn') : p.click('#houseBtn')); await p.waitForTimeout(1200);
+    await p.keyboard.press('Escape'); await p.waitForTimeout(1200);
     if (await p.$('#guide.open')) { await p.keyboard.press('Escape'); await p.waitForTimeout(300); }
     /* p42 — 폰은 집 화면에서 목록 시트가 저절로 안 열린다. 시트가 닫혀 있어도 isVisible 은 참이라 body 클래스로 본다 */
     if (mob && !(await p.evaluate(() => document.body.className.includes('sh-list')))) { await p.tap('#tabbar [data-tab="list"]'); await p.waitForTimeout(500); }

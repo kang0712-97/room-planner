@@ -8,7 +8,7 @@ const chromium = require('playwright')[process.env.BROWSER || 'chromium'];   // 
   p.on('console', m => { if (m.type() === 'error') errs.push('console: ' + m.text()); });
 
   await p.goto('file://' + (process.env.APP || (process.env.WORK || '/home/claude/work') + '/app.html'));
-  await p.click('#houseBtn');                 // 인트로부터 닫는다
+  await p.keyboard.press('Escape');                 // 인트로부터 닫는다(p57 — Esc)
   await p.waitForTimeout(1500);
   if (await p.$('#guide.open')) { await p.click('#gClose'); await p.waitForTimeout(400); }
   await p.click('#roomList .roomcard .nm'); // 방으로 들어간다

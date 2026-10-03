@@ -4,7 +4,7 @@ const chromium = require('playwright')[process.env.BROWSER || 'chromium'];   // 
   const p = await b.newPage({ viewport: { width: 1600, height: 950 } });
   const errs = []; p.on('pageerror', e => errs.push(String(e)));
   await p.goto('file://' + (process.env.APP || (process.env.WORK || '/home/claude/work') + '/app.html'));
-  await p.click('#houseBtn'); await p.waitForTimeout(1500);
+  await p.keyboard.press('Escape'); await p.waitForTimeout(1500);
   if (await p.$('#guide.open')) { await p.click('#gClose'); await p.waitForTimeout(400); }
   await p.click('#roomList .roomcard .nm'); await p.waitForTimeout(400);
   const T = async s => (await p.textContent(s) || '').replace(/\s+/g,' ').trim();
@@ -20,7 +20,7 @@ const chromium = require('playwright')[process.env.BROWSER || 'chromium'];   // 
   console.log('토스트     :', await T('#toast'));
 
   // 새로고침 후에도 꺼져 있나
-  await p.reload(); await p.click('#houseBtn'); await p.waitForTimeout(1500);
+  await p.reload(); await p.keyboard.press('Escape'); await p.waitForTimeout(1500);
   if (await p.$('#guide.open')) { await p.click('#gClose'); await p.waitForTimeout(400); }
   await p.click('#roomList .roomcard .nm'); await p.waitForTimeout(400);
   console.log('새로고침 후 점수 버튼 :', await p.$eval('#scoreBtn', n => n.getAttribute('aria-pressed')),

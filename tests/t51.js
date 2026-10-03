@@ -26,7 +26,7 @@ const FILE = process.env.APP || WORK + '/app.html', APP = 'file://' + FILE;
   const c = await b.newContext({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 2, isMobile: true, hasTouch: true });
   p = await c.newPage(); p.on('pageerror', e => errs.push(e.message)); cdp = await c.newCDPSession(p);
   await p.goto(APP); await p.waitForTimeout(700);
-  await p.fill('#isW', '3000'); await p.fill('#isD', '3600'); await p.tap('#isGo'); await p.waitForTimeout(800);
+  await p.fill('#isW', '3000'); await p.fill('#isD', '3600'); await p.tap('#isGo'); await p.waitForTimeout(1300); await p.locator('#plan .rg').last().tap(); await p.waitForTimeout(800);
   if (await p.$('#guide.open')) { await p.keyboard.press('Escape'); await p.waitForTimeout(300); }
   await p.tap('#crumbRoom'); await p.waitForTimeout(300); await p.fill('#rmName', '시험방'); await p.tap('#rmSave'); await p.waitForTimeout(400);
   const ver = await p.$eval('#introVer', n => n.textContent);

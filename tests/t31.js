@@ -8,7 +8,7 @@ const fs = require('fs');
   const p = await ctx.newPage(); const errs = [];
   p.on('pageerror', e => errs.push(e.message));
   const open = async () => { await p.goto(APP); await p.waitForTimeout(700);
-    if (await p.isVisible('#houseBtn')) { await p.click('#houseBtn'); await p.waitForTimeout(1200); }
+    if (await p.isVisible('#intro')) { await p.keyboard.press('Escape'); await p.waitForTimeout(1200); }
     if (await p.$('#guide.open')) { await p.keyboard.press('Escape'); await p.waitForTimeout(300); } };
   const img = () => p.evaluate(() => { const i = document.querySelector('#plan image:not(.inv)');
     const h = i && i.getAttribute('href'); return h && h.startsWith('data:image/jpeg') ? h.length : 0; });

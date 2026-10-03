@@ -7,7 +7,7 @@ const chromium = require('playwright')[process.env.BROWSER || 'chromium'];   // 
   p.on('pageerror', e => errs.push(String(e)));
 
   await p.goto('file://' + (process.env.APP || (process.env.WORK || '/home/claude/work') + '/app.html'));
-  await p.click('#houseBtn'); await p.waitForTimeout(1500);
+  await p.keyboard.press('Escape'); await p.waitForTimeout(1500);
   if (await p.$('#guide.open')) { await p.click('#gClose'); await p.waitForTimeout(400); }
   await p.click('#roomList .roomcard .nm'); await p.waitForTimeout(400);
   const T = async s => (await p.textContent(s) || '').replace(/\s+/g, ' ').trim();

@@ -11,7 +11,7 @@ const APP = 'file://' + (process.env.APP || (process.env.WORK || '/home/claude/w
   const walk = async () => +(((await clash()).match(/최소 통로폭 (\d+)/) || [])[1]);
   const score = async () => +(((await p.textContent('.scorebox')).match(/(\d+)/) || [])[1]);
   const reload = async () => { await p.reload(); await p.waitForTimeout(900);
-    if (await p.$('#intro:not([hidden])')) { await p.click('#houseBtn'); await p.waitForTimeout(1300); }
+    if (await p.$('#intro:not([hidden])')) { await p.keyboard.press('Escape'); await p.waitForTimeout(1300); }
     if (await p.$('#guide.open')) { await p.keyboard.press('Escape'); await p.waitForTimeout(300); }
     await p.click('#roomList .roomcard .nm'); await p.waitForTimeout(700); };
   const put = async (nm, v) => { await p.evaluate(([nm, v]) => { const s = JSON.parse(localStorage.getItem('room-planner/3'));

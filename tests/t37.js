@@ -15,7 +15,7 @@ const APP = 'file://' + (process.env.APP || (process.env.WORK || '/home/claude/w
         const it = s.items.find(i => i.cat === cid); Object.assign(it, v); }
       localStorage.setItem('room-planner/3', JSON.stringify(s)); }, moves);
     await p.reload(); await p.waitForTimeout(900);
-    if (await p.$('#intro:not([hidden])')) { await p.click('#houseBtn'); await p.waitForTimeout(1300); }
+    if (await p.$('#intro:not([hidden])')) { await p.keyboard.press('Escape'); await p.waitForTimeout(1300); }
     if (await p.$('#guide.open')) { await p.keyboard.press('Escape'); await p.waitForTimeout(300); }
     await p.click('#roomList .roomcard .nm'); await p.waitForTimeout(700);
   };

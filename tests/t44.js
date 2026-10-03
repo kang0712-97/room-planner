@@ -34,7 +34,7 @@ const FILE = process.env.APP || WORK + '/app.html', APP = 'file://' + FILE;
   chk(all[10].t === '링크로 보내기', '마지막 장 «링크로 보내기»');
   await p.keyboard.press('Escape'); await p.waitForTimeout(200);
   await p.click('#helpBtn'); await p.waitForTimeout(300);
-  chk(await p.$eval('#gImg', i => i.complete && i.naturalWidth === 812), '«사용법» 다시 열기 → 첫 장 그대로');
+  chk(await p.$eval('#gImg', i => i.complete && i.naturalWidth === 756), '«사용법» 다시 열기 → 첫 장 그대로');
   await c.close();
 
   console.log('\npageerror :', errs.length, errs.slice(0, 3));

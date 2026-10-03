@@ -8,9 +8,9 @@ const chromium = require('playwright')[process.env.BROWSER || 'chromium'];   // 
   await p.waitForTimeout(600);
 
   // ① 방 만들고 → 집으로 → 다시 방으로 들어가지는가
-  await p.click('#isPre .prechip:has-text("원룸")'); await p.waitForTimeout(120);
-  await p.click('#isGo'); await p.waitForTimeout(1000);
-  console.log('방 만들고 바로 입장 :', await T('#crumbRoom'));
+  await p.fill('#isW', '3500'); await p.fill('#isD', '3000');
+  await p.click('#isGo'); await p.waitForTimeout(1300); await p.locator('#plan .rg').last().click(); await p.waitForTimeout(1000);
+  console.log('방 만들고 집 화면에서 누르면 입장 :', await T('#crumbRoom'));
   console.log('시트 닫혔나 :', !(await p.evaluate(() => document.body.className.includes('sh-'))));
   console.log('토스트 :', await T('#toast'), '· 높이', await p.$eval('#toast', n => Math.round(n.getBoundingClientRect().height)),
               '· 폭', await p.$eval('#toast', n => Math.round(n.getBoundingClientRect().width)));

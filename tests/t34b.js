@@ -6,7 +6,7 @@ const APP = 'file://' + (process.env.APP || (process.env.WORK || '/home/claude/w
   const chk = (c, m) => { console.log((c ? '  ✓ ' : '  ✗ ') + m); if (!c) ok = false; };
   let c = await b.newContext({ viewport:{ width:1600, height:900 } }); let p = await c.newPage(); p.on('pageerror', e => errs.push(e.message));
   await p.goto(APP); await p.waitForTimeout(800);
-  await p.click('#isPre button:has-text("원룸")'); await p.click('#isGo'); await p.waitForTimeout(1200);
+  await p.fill('#isW', '3500'); await p.fill('#isD', '3000'); await p.click('#isGo'); await p.waitForTimeout(1300); await p.locator('#plan .rg').last().click(); await p.waitForTimeout(1200);
   if (await p.$('#guide.open')) { await p.keyboard.press('Escape'); await p.waitForTimeout(300); }
   chk((await p.textContent('#crumbRoom')).trim() === '원룸', 'P1-6 원룸 프리셋 → 이름 «원룸»');
   await p.click('#addRoomBtn').catch(()=>{});
@@ -29,7 +29,7 @@ const APP = 'file://' + (process.env.APP || (process.env.WORK || '/home/claude/w
   await c.close();
   c = await b.newContext({ viewport:{ width:360, height:740 }, isMobile:true, hasTouch:true, deviceScaleFactor:2 }); p = await c.newPage(); p.on('pageerror', e => errs.push(e.message));
   await p.goto(APP); await p.waitForTimeout(800);
-  await p.fill('#isW', '3000'); await p.fill('#isD', '3000'); await p.tap('#isGo'); await p.waitForTimeout(1200);
+  await p.fill('#isW', '3000'); await p.fill('#isD', '3000'); await p.tap('#isGo'); await p.waitForTimeout(1300); await p.locator('#plan .rg').last().tap(); await p.waitForTimeout(1200);
   if (await p.$('#guide.open')) { await p.keyboard.press('Escape'); await p.waitForTimeout(300); }
   chk((await p.textContent('#crumbRoom')).trim() === '새 방', 'P1-6 직접 입력 → «새 방»');
   await p.tap('#tabbar [data-tab="add"]'); await p.waitForTimeout(400); await p.tap('#apModal [data-ap="furn"]'); await p.waitForTimeout(500);

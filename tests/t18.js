@@ -9,15 +9,15 @@ const chromium = require('playwright')[process.env.BROWSER || 'chromium'];   // 
   await p.goto('file://' + (process.env.APP || (process.env.WORK || '/home/claude/work') + '/app.html'));
   await p.waitForTimeout(400);
   console.log('== 처음 온 사람 ==');
-  console.log('제목  :', await T(p, '#introT'));
+  console.log('제목  :', await T(p, '.intro-title'));
   console.log('입력줄 보임 :', !(await p.$eval('#introStart', n => n.hidden)));
-  console.log('방 프리셋 :', await p.$$eval('#isPre .prechip', ns => ns.map(n => n.textContent.replace(/\s+/g,' ').trim())));
+  await p.mouse.click(10, 10); await p.waitForTimeout(100);      // p57 — 빈 곳을 누르면 끝 장면
+  console.log('끝 장면 :', await T(p, '#introScene .count'), '×', await T(p, '#introScene .dlt'), '·', await T(p, '#introScene .pl'), await T(p, '#introScene .ps'));
 
   const t0 = Date.now();
-  await p.click('#isPre .prechip:has-text("원룸")'); await p.waitForTimeout(120);
-  console.log('원룸 채움 :', await p.$eval('#isW', n => n.value), '×', await p.$eval('#isD', n => n.value));
-  await p.click('#isGo'); await p.waitForTimeout(700);
-  console.log('방 만들고 바로 입장 :', await T(p, '#crumbRoom'), '·', Date.now() - t0, 'ms');
+  console.log('칸 기본값 :', await p.$eval('#isW', n => n.value), '×', await p.$eval('#isD', n => n.value));
+  await p.click('#isGo'); await p.waitForTimeout(1300); await p.locator('#plan .rg').last().click(); await p.waitForTimeout(700);
+  console.log('방 만들고 집 화면에서 누르면 입장 :', await T(p, '#crumbRoom'), '·', Date.now() - t0, 'ms');
   console.log('상태 패널 :', (await T(p, '#clashBox .read')).slice(0, 30));
   console.log('선택 전 안내 :', await T(p, '.selhint'));
 
@@ -33,9 +33,7 @@ const chromium = require('playwright')[process.env.BROWSER || 'chromium'];   // 
   // ② 다시 열면 «내 집» 으로 바뀌는가
   await p.reload(); await p.waitForTimeout(600);
   console.log('\n== 두 번째 방문 ==');
-  console.log('제목  :', await T(p, '#introT'));
-  console.log('입력줄 숨김 :', await p.$eval('#introStart', n => n.hidden));
-  await p.click('#houseBtn'); await p.waitForTimeout(1000);
+  console.log('인트로 없이 집 화면 :', await p.$eval('#intro', n => n.hidden));
   const cards = await p.$$eval('#roomList .roomcard', ns => ns.map(n => n.textContent.replace(/\s+/g,' ').trim()));
   console.log('방 목록 :', cards);
   console.log('카드에 삭제 남았나 :', !!(await p.$('#roomList [data-act="del"]')));

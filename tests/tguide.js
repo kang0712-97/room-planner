@@ -5,7 +5,7 @@ const chromium = require('playwright')[process.env.BROWSER || 'chromium'];   // 
   const errs = []; p.on('pageerror', e => errs.push(String(e)));
   const T = async s => (await p.textContent(s) || '').replace(/\s+/g,' ').trim();
   await p.goto('file://' + (process.env.APP || (process.env.WORK || '/home/claude/work') + '/app.html'));
-  await p.click('#houseBtn'); await p.waitForTimeout(1500);
+  await p.keyboard.press('Escape'); await p.waitForTimeout(1500);
   console.log('첫 방문 가이드 자동 :', await p.$eval('#guide', n => n.classList.contains('open')));
   console.log('1단계 :', await T('#gTitle'), '|', await T('#gNum'));
   console.log('그림 로드 :', await p.$eval('#gImg', n => n.complete && n.naturalWidth > 0), await p.$eval('#gImg', n => n.naturalWidth+'x'+n.naturalHeight));
@@ -16,7 +16,7 @@ const chromium = require('playwright')[process.env.BROWSER || 'chromium'];   // 
   await p.click('#gNext'); await p.waitForTimeout(300);
   console.log('닫힘 :', !(await p.$eval('#guide', n => n.classList.contains('open'))));
 
-  await p.reload(); await p.click('#houseBtn'); await p.waitForTimeout(1500);
+  await p.reload(); await p.keyboard.press('Escape'); await p.waitForTimeout(1500);
   console.log('두 번째 방문 자동 :', await p.$eval('#guide', n => n.classList.contains('open')));
   await p.click('#roomList .roomcard .nm'); await p.waitForTimeout(400);
   await p.click('#helpBtn'); await p.waitForTimeout(400);

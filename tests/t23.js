@@ -17,7 +17,7 @@ const SIZES = [ [390, 844], [390, 640], [360, 560] ];
     p.on('pageerror', e => errs.push(`${W}×${H} ${e}`));
     await p.goto('file://' + (process.env.APP22 || process.env.APP || (process.env.WORK || '/home/claude/work') + '/app22.html'));
     await p.waitForTimeout(700);
-    await p.click('#houseBtn'); await p.waitForTimeout(1500);
+    await p.keyboard.press('Escape'); await p.waitForTimeout(1500);
     if (await p.$('#guide.open')) { await p.click('#gClose'); await p.waitForTimeout(400); }
     await p.click('#roomList .roomcard .nm').catch(async () => {
       await p.click('#tabbar [data-tab="list"]'); await p.waitForTimeout(300);
