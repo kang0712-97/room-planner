@@ -67,11 +67,26 @@ const APP = 'file://' + (process.env.APP || (process.env.WORK || '/home/claude/w
   console.log('마지막으로 본 방 :', await p.$$eval('#plan .rg', ns => ns.filter(n => n.querySelector('.lastchip')).map(n => n.getAttribute('aria-label') + ' · ' + n.querySelector('.lastchip').textContent)));
   await p.reload(); await p.waitForTimeout(150); await p.mouse.click(1500, 450);
   chk(await p.$eval('#homeTitle', n => n.hidden) && await p.$$eval('#plan .rg.drawing', n => n.length) === 0 && !(await p.evaluate(() => document.body.classList.contains('hret'))), '누르면 바로 끝');
+  /* p62 — 그날 첫 방문(어제 본 것으로 돌려 둠): 입력 칸 없는 인트로 → 저절로 «마지막으로 본 방» 으로 */
+  const yest = () => p.evaluate(() => { const o = JSON.parse(localStorage.getItem('room-planner/opt')); o.introDay = '2000-01-01'; localStorage.setItem('room-planner/opt', JSON.stringify(o)); });
+  await yest(); await p.reload(); await p.waitForTimeout(300);
+  chk(!(await p.$eval('#intro', n => n.hidden)) && await p.$eval('#introStart', n => n.hidden) && (await cls(p)).includes('run'), '다시 온 사람의 그날 첫 방문: 입력 칸 없는 인트로');
+  await p.waitForTimeout(2350);
+  chk(await p.$$eval('.ifly', n => n.length) === 1 && await p.$$eval('.ititle-fly', n => n.length) === 1, '장면이 끝나면 저절로: 방 윤곽·제목이 날아감');
+  await p.waitForTimeout(700);
+  chk(await p.$eval('#intro', n => n.hidden) && await p.$$eval('.ifly,.ititle-fly', n => n.length) === 0 && !(await p.$eval('#introStart', n => n.hidden)), '집 화면에 앉음(입력 칸은 다음 처음 방문용으로 되돌림)');
+  chk(await p.$$eval('#plan .rg', ns => ns.filter(n => n.querySelector('.rglow')).map(n => !!n.querySelector('.lastchip')).join()) === 'true', '«마지막으로 본 방» 이 빛남');
+  await p.reload(); await p.waitForTimeout(150);
+  chk(await p.$eval('#intro', n => n.hidden) && !(await p.$eval('#homeTitle', n => n.hidden)), '같은 날 다시 열면 짧은 장면(제목 → 위 줄)');
+  await yest(); await p.reload(); await p.waitForTimeout(700); await p.mouse.click(1500, 450); await p.waitForTimeout(100);
+  chk(await p.$eval('#intro', n => n.hidden) && await p.$$eval('.ifly,.ititle-fly', n => n.length) === 0 && await p.$eval('#brand span', n => n.style.visibility === ''), '그날 첫 인트로도 누르면 바로 집 화면');
   await c.close();
   [c, p] = await open({ rm: 1 });
   await p.click('#isGo'); await p.waitForTimeout(100); await p.locator('#plan .rg').last().click(); await p.waitForTimeout(300);
-  await p.click('#goHome'); await p.reload(); await p.waitForTimeout(100);
-  chk(await p.$eval('#homeTitle', n => n.hidden) && await p.$$eval('#plan .rg.drawing', n => n.length) === 0 && await p.$$eval('#plan .lastchip', n => n.length) === 1, '움직임 줄이기(다시 온 사람): 완성된 집 화면 바로 · 칩은 보임');
+  await p.click('#goHome');
+  await p.evaluate(() => { const o = JSON.parse(localStorage.getItem('room-planner/opt')); o.introDay = '2000-01-01'; localStorage.setItem('room-planner/opt', JSON.stringify(o)); });
+  await p.reload(); await p.waitForTimeout(100);
+  chk(await p.$eval('#homeTitle', n => n.hidden) && await p.$$eval('#plan .rg.drawing', n => n.length) === 0 && await p.$$eval('#plan .lastchip', n => n.length) === 1, '움직임 줄이기(다시 온 사람, 그날 첫 방문이어도): 완성된 집 화면 바로 · 칩은 보임');
   await c.close();
 
   /* ⑥ Esc = 인트로 닫고 집 화면 + 첫 방문 사용법 */

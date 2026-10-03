@@ -558,6 +558,9 @@ details.fold[open]>summary{border-bottom:1px solid var(--line)}
 /* p59 — 다시 온 사람의 제목: 위에서 34% 에 떴다가 위 줄 앱 이름 자리로 */
 .htitle{position:fixed;left:0;right:0;top:34%;z-index:60;display:flex;justify-content:center;pointer-events:none}
 .htitle .intro-title{transform-origin:0 0;white-space:nowrap}
+/* p62 — 다시 온 사람 인트로의 제목 복제본(위 줄 앱 이름 자리로 날아간다) */
+.ititle-fly{position:fixed;z-index:61;margin:0;transform-origin:0 0;white-space:nowrap;pointer-events:none}
+.intro.back.leave .intro-title{opacity:1}
 body.hret .bar,body.hret .side,body.hret .tabbar{opacity:0}
 .intro.leave .intro-title,.intro.leave .intro-line,.intro.leave .istart{opacity:0;transition:opacity .2s}
 /* 날아가는 방 윤곽 — 도착 자리(집 도면의 방)에 두고, 출발 자리에서 transform 으로 끌어온다 */
@@ -1795,7 +1798,7 @@ const ROOM_PRESETS = [
 ];
 
 /* 화면에 찍히는 판 번호. 실기에서 «고쳤는데 그대로다» 를 가르는 유일한 단서다. */
-const BUILD = "2026-10-03 · p61";
+const BUILD = "2026-10-03 · p62";
 
 const KEYOPT = "room-planner/opt";
 let opt = { score:true, walk:true, unit:"mm", guide:0 };
@@ -6300,6 +6303,8 @@ const IS_BED = { w:1150, h:2100 }, IS_DESK = { w:1600, h:600 }, IS_DOOR = 800, I
 const isFmt = n => Math.round(n).toLocaleString("en-US");
 const isCalm = () => matchMedia("(prefers-reduced-motion: reduce)").matches;
 let isW0 = 3500, isD0 = 3000, isRaf = 0;
+/* p62c — 지금 떠 있는 인트로를 바로 끝내는 손잡이(공유 링크가 오면 receiveShared 가 부른다) */
+let introStop = null;
 function introVerdict(W, H){
   if (W < IS_BED.w || H < IS_BED.h) return { k:"bad", t:"침대가 안 들어가요", d:null };
   const ax = (a0, a1, b0, b1) => a1 <= b0 ? [a1, b0] : b1 <= a0 ? [a0, b1]
@@ -6407,7 +6412,7 @@ function homeReturn(after){
   const anims = [], timers = [];
   let over = false;
   const end = () => {
-    if (over) return; over = true;
+    if (over) return; over = true; introStop = null;
     timers.forEach(clearTimeout); anims.forEach(a => a.cancel());
     window.removeEventListener("pointerdown", end, true); window.removeEventListener("keydown", end, true);
     ov.hidden = true; name.style.visibility = ""; document.body.classList.remove("hret");
@@ -6432,6 +6437,79 @@ function homeReturn(after){
   }, 400));
   timers.push(setTimeout(end, homeDraw.until - t0 + 50));
   window.addEventListener("pointerdown", end, true); window.addEventListener("keydown", end, true);
+  introStop = end;
+}
+/* p62 — 다시 온 사람의 그날 첫 방문: 입력 칸 없는 인트로(2.0초) → 0.3초 쉼 → 제목은 위 줄로, 방 윤곽은
+   «마지막으로 본 방» 자리로 날아가 앉고 나머지 방은 차례로 그려진다. 누르거나 키를 누르면 바로 집 화면. */
+function introBack(after){
+  const box = $("intro"), sc = $("introScene"), tt = box.querySelector(".intro-title"), name = $("brand").querySelector("span");
+  const mine = state.rooms.filter(r => !r.sample);
+  const rid = ROOMOF(opt.last) ? opt.last : (mine[0] || state.rooms[0]).id;
+  const timers = [], anims = [], tmp = [];
+  let over = false;
+  const end = () => {
+    if (over) return; over = true; introStop = null;
+    timers.forEach(clearTimeout); anims.forEach(a => a.cancel()); tmp.forEach(n => n.remove());
+    window.removeEventListener("pointerdown", end, true); window.removeEventListener("keydown", end, true);
+    sc.removeEventListener("animationend", onEnd);
+    introFinish(); sc.classList.remove("idle", "leave");
+    box.hidden = true; box.classList.remove("back", "leave"); $("introStart").hidden = false;
+    tt.style.visibility = ""; name.style.visibility = "";
+    landRoom = null; homeDraw = null; renderScene();
+    if (typeof after === "function") after();
+  };
+  const land = () => {
+    introFinish(); sc.classList.remove("idle");
+    box.classList.add("leave"); sc.classList.add("leave");
+    timers.push(setTimeout(() => {
+      const g = sc._g, m = sc.getScreenCTM();
+      const a = new DOMPoint(g.x0, g.y0).matrixTransform(m), z = new DOMPoint(g.x1, g.y1).matrixTransform(m);
+      const ta = tt.getBoundingClientRect();
+      const t0 = performance.now();
+      landRoom = rid;
+      homeDraw = { t0:t0 - 400, until:t0 + 100 + (state.rooms.length - 1) * 80 + 800 };   /* 나머지 방은 0.1초 뒤부터 */
+      renderScene();
+      const tg = svg.querySelector(`.rg[data-room="${rid}"] rect.rbody`), t = tg && tg.getBoundingClientRect();
+      if (!t || !t.width || !t.height) return end();
+      /* 제목: 복제본을 같은 자리에 띄워 위 줄 앱 이름 자리로 */
+      const cl = tt.cloneNode(true); cl.classList.add("ititle-fly");
+      Object.assign(cl.style, { left:ta.left + "px", top:ta.top + "px" });
+      document.body.appendChild(cl); tmp.push(cl);
+      tt.style.visibility = "hidden"; name.style.visibility = "hidden";
+      const b = name.getBoundingClientRect(), c0 = cl.getBoundingClientRect();
+      const k = parseFloat(getComputedStyle(name).fontSize) / parseFloat(getComputedStyle(cl).fontSize);
+      anims.push(cl.animate([{ transform:"none" }, { transform:`translate(${b.left - c0.left}px,${(b.top + b.height / 2) - (c0.top + c0.height * k / 2)}px) scale(${k})` }],
+        { duration:440, easing:"cubic-bezier(.4,0,.2,1)", fill:"forwards" }));
+      /* 방 윤곽: 인트로의 방 → 마지막으로 본 방 */
+      const fly = document.createElement("div"); fly.className = "ifly"; tmp.push(fly);
+      Object.assign(fly.style, { left:t.left + "px", top:t.top + "px", width:t.width + "px", height:t.height + "px" });
+      document.body.appendChild(fly);
+      anims.push(box.animate([{ opacity:1 }, { opacity:0 }], { duration:180, fill:"forwards" }));
+      const fa = fly.animate([
+        { transform:`translate(${a.x - t.left}px,${a.y - t.top}px) scale(${(z.x - a.x) / t.width},${(z.y - a.y) / t.height})` },
+        { transform:"none" }], { duration:440, easing:"cubic-bezier(.4,0,.2,1)" });
+      anims.push(fa);
+      fa.finished.then(() => {
+        if (over) return;
+        const left = homeDraw ? homeDraw.until - performance.now() : 0;
+        glowRoom = { id:rid, until:performance.now() + 1200 };
+        over = true; introStop = null;    /* 아래 정리는 end() 와 같되, 그려지기·빛남은 남겨 둔다 */
+        tmp.forEach(n => n.remove()); anims.forEach(x => x.cancel());
+        window.removeEventListener("pointerdown", end, true); window.removeEventListener("keydown", end, true);
+        sc.classList.remove("leave"); box.hidden = true; box.classList.remove("back", "leave"); $("introStart").hidden = false;
+        tt.style.visibility = ""; name.style.visibility = "";
+        landRoom = null; renderScene();
+        setTimeout(() => { homeDraw = null; renderScene(); }, Math.max(0, left) + 50);
+        if (typeof after === "function") after();
+      }).catch(() => {});
+    }, 170));
+  };
+  const onEnd = e => { if (e.target === sc && e.animationName === "isClock") timers.push(setTimeout(land, 300)); };
+  box.classList.add("back"); $("introStart").hidden = true; box.hidden = false;
+  introPlay();
+  sc.addEventListener("animationend", onEnd);
+  window.addEventListener("pointerdown", end, true); window.addEventListener("keydown", end, true);
+  introStop = end;
 }
 /* 칸의 숫자를 바꾸면 도면이 그 크기로 0.28초 동안 바뀐다 */
 function introMorph(W, H){
@@ -6451,13 +6529,17 @@ function introMorph(W, H){
 function showIntro(after){
   const box = $("intro");
   $("introVer").textContent = BUILD;
-  /* p59 — 자기 방이 있으면 인트로 대신 제목 장면 → 집 화면 */
-  if (state.rooms.some(r => !r.sample)) return homeReturn(after);
+  /* p62 — 자기 방이 있으면: 그날 첫 방문은 입력 칸 없는 인트로 → 집 화면, 같은 날 다시 열면 p59 짧은 장면 */
+  const today = new Date().toLocaleDateString("sv");          /* 로컬 날짜 YYYY-MM-DD */
+  const seen = opt.introDay === today;
+  if (!seen){ opt.introDay = today; saveOpt(); }
+  if (state.rooms.some(r => !r.sample)) return (seen || isCalm()) ? homeReturn(after) : introBack(after);
   box.hidden = false;
   isW0 = Number($("isW").value) || 3500; isD0 = Number($("isD").value) || 3000;
   introPlay();
   const inStart = t => !!(t && t.closest && t.closest("#introStart"));
   const leave = () => {
+    introStop = null;
     if (box.hidden || box.classList.contains("out")) return;
     introFinish();
     box.classList.add("out");
@@ -6466,6 +6548,7 @@ function showIntro(after){
       if (typeof after === "function") after();
     }, isCalm() ? 0 : 350);
   };
+  introStop = leave;
   $("introScene").addEventListener("animationend", e => {
     if (e.target === $("introScene") && e.animationName === "isClock") introFinish();
   });
@@ -7025,6 +7108,7 @@ function importShared(sr){
   toast(`«${name}» 배치를 받았습니다 — 되돌리기로 취소할 수 있어요`, 3000);
 }
 async function receiveShared(h){
+  if (introStop) introStop();           /* p62c — 인트로 밑에 확인 창이 깔리지 않게 */
   let res = null;
   try { res = await readShareHash(h); } catch(e){ res = null; }
   if (!res || !res.room) return toast(res && res.why ? res.why : "받은 링크가 잘렸거나 망가져서 열 수 없어요 — 보낸 사람에게 다시 보내 달라고 해 주세요", 4200);
