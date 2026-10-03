@@ -1795,7 +1795,7 @@ const ROOM_PRESETS = [
 ];
 
 /* 화면에 찍히는 판 번호. 실기에서 «고쳤는데 그대로다» 를 가르는 유일한 단서다. */
-const BUILD = "2026-10-03 · p60";
+const BUILD = "2026-10-03 · p61";
 
 const KEYOPT = "room-planner/opt";
 let opt = { score:true, walk:true, unit:"mm", guide:0 };
@@ -5373,7 +5373,11 @@ function askRoom(rid, rect){
   $("rmSave").textContent = rid ? "저장" : "방 만들기";
   $("rmTape").toggleAttribute("hidden", !!rid);      /* SVG 에는 .hidden 속성이 없다 — 속성으로 */
   $("roomModal").classList.add("open");
-  if (!rid){ setRmTape(0, true); requestAnimationFrame(() => requestAnimationFrame(() => setRmTape(Number($("rmW").value) || 0))); }
+  if (!rid){
+    const w = Number($("rmW").value) || 0;
+    if (matchMedia("(prefers-reduced-motion: reduce)").matches) setRmTape(w, true);     /* p61 — 기다릴 이유가 없다 */
+    else { setRmTape(0, true); requestAnimationFrame(() => requestAnimationFrame(() => setRmTape(w))); }
+  }
   if (!isPhone()) setTimeout(() => $("rmName").focus(), 30);
 }
 /* p60 — 줄자 길이: 6,000mm 에서 최대(246). 당기는 동안 숫자는 오른손 위치를 읽어 따라 올라간다 */

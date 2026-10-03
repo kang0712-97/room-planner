@@ -102,7 +102,7 @@ const APP = 'file://' + (process.env.APP || (process.env.WORK || '/home/claude/w
   await c.close();
   [c, p] = await open({ rm: 1 }); await p.keyboard.press('Escape'); await p.waitForTimeout(200);
   if (await p.$('#guide.open')) { await p.keyboard.press('Escape'); await p.waitForTimeout(200); }
-  await p.click('#addRoomBtn'); await p.waitForTimeout(60);
+  await p.click('#addRoomBtn'); await p.waitForTimeout(200);
   chk(await tx() === 123 && await T(p, '#rmCnt') === '3,000 mm', '움직임 줄이기: 줄자가 바로 그 길이');
   await p.click('#rmSave'); await p.waitForTimeout(60);
   chk(await p.$$eval('#plan .rg.drawing', n => n.length) === 0 && await p.$$eval('#plan .rglow', n => n.length) === 0, '움직임 줄이기: 새 방이 바로(그려지기·빛남 없음)');
