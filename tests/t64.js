@@ -26,6 +26,11 @@ const APP = 'file://' + (process.env.APP || (process.env.WORK || '/home/claude/w
   chk(await p.$eval('#themeBtn', n => n.getBoundingClientRect().width > 0), '1600: 위 줄에 «어둡게» 단추가 보임');
   const bar = await p.$eval('.bar', n => Math.round(n.getBoundingClientRect().height));
   chk(bar <= 60, '1600: 위 줄 한 줄 유지(60px 이하)');
+  chk(await p.$eval('#themeBtn span', n => getComputedStyle(n).display) === 'none', '1600: 위 줄에선 아이콘만(글자는 툴팁·aria-label)');
+
+  await p.click('#roomList .roomcard .nm'); await p.waitForTimeout(300);
+  const bar2 = await p.$eval('.bar', n => Math.round(n.getBoundingClientRect().height));
+  chk(bar2 <= 60, '1600 방 화면: 위 줄 한 줄 유지(60px 이하)');
 
   /* ② 누르면 어둡게 + 저장 */
   await p.click('#themeBtn'); await p.waitForTimeout(100);
@@ -54,6 +59,7 @@ const APP = 'file://' + (process.env.APP || (process.env.WORK || '/home/claude/w
   await p.click('#tabbar [data-tab="more"]'); await p.waitForTimeout(400);
   const r = await p.$eval('#themeBtn', n => { const b = n.getBoundingClientRect(); return [Math.round(b.width), Math.round(b.height)]; });
   chk(r[0] >= 32 && r[1] >= 32, '폰 «도구» 시트에 단추(32px 이상)');
+  chk(await p.$eval('#themeBtn span', n => getComputedStyle(n).display) !== 'none', '폰: 글자 «어둡게» 도 보임');
   await p.click('#themeBtn'); await p.waitForTimeout(100);
   chk(await theme(p) === 'dark' && await bg(p, 'body') === DARK, '폰: 누르면 어둡게');
   await p.reload(); await p.waitForTimeout(300);
