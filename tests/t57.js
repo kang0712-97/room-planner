@@ -59,6 +59,12 @@ const APP = 'file://' + (process.env.APP || (process.env.WORK || '/home/claude/w
   await p.reload(); await p.waitForTimeout(150);
   chk(await p.$eval('#intro', n => n.hidden), '다시 온 사람(내 방 있음): 인트로 없음');
   chk(!(await p.$eval('#homeTitle', n => n.hidden)) && await p.evaluate(() => document.body.classList.contains('hret')), '제목이 먼저 뜨고 위 줄은 아직 숨음');
+  /* p63 — 첫 모습 = 안드로이드 시작 화면: 종이 바탕 · 세로 가운데 아이콘 · 그 아래 이름 */
+  const sp = await p.evaluate(() => { const H = innerHeight, i = document.querySelector('#homeTitle .hicon').getBoundingClientRect(),
+    n = document.querySelector('#homeTitle .htname').getBoundingClientRect(), bg = getComputedStyle(document.querySelector('#homeTitle .htbg'));
+    return { mid: Math.abs(i.top + i.height / 2 - H / 2) <= 2, below: n.top >= i.bottom, center: Math.abs(n.left + n.width / 2 - innerWidth / 2) <= 2,
+             paper: bg.backgroundColor === 'rgb(238, 242, 240)', op: getComputedStyle(document.querySelector('#homeTitle .htname')).opacity }; });
+  chk(sp.mid && sp.below && sp.center && sp.paper && sp.op === '1', '첫 모습 = 스플래시(종이 바탕 #EEF2F0 · 세로 가운데 아이콘 · 아래 이름 · 페이드 없음)');
   chk(await p.$$eval('#plan .rg.drawing', n => n.length) === 2 && await p.$$eval('#plan .rg.drawing .hw', n => n.length) === 6, '방 2개가 그려지는 중(벽 세 줄씩)');
   const d = await p.$$eval('#plan .rg.drawing', ns => ns.map(n => parseFloat(n.style.getPropertyValue('--d'))));
   chk(Math.abs((d[1] - d[0]) - 0.08) < 0.005, '방 사이 간격 0.08초');
