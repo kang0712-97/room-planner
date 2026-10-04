@@ -943,9 +943,11 @@ ol.todo li:first-child{color:var(--ink-2);font-weight:500}
    «끌어올리는 시트» 로 만든다. DOM 을 옮기지 않고 CSS 로만 자리를 바꿔
    기존 이벤트·렌더 코드를 한 줄도 건드리지 않았다. */
 .tabbar,.selbar{display:none}
+.phw{display:none}   /* p67 — 폰에서만 붙는 말(«저장한 배치») */
 
 @media(max-width:700px){
   .app{height:100dvh;min-height:0;padding-top:var(--crumbh)}
+  .phw{display:inline}
   .work{display:block;position:relative;height:100%;min-height:0}
   .stage{position:absolute;inset:0;min-height:0;order:0}
   /* p60 — 방 추가·수정 창은 폰에서 아래에서 올라오는 시트 */
@@ -1164,7 +1166,7 @@ ol.todo li:first-child{color:var(--ink-2);font-weight:500}
         <button class="btn" id="addDoorBtn"><svg class="i" viewBox="0 0 24 24"><use href="#ic-door"/></svg><span>문</span></button>
         <button class="btn" id="addWinBtn"><svg class="i" viewBox="0 0 24 24"><use href="#ic-window"/></svg><span>창문</span></button>
       </span>
-      <button class="btn" id="rotBtn" title="선택한 가구 90° 회전 (단축키 R · 가구 더블클릭)" aria-label="회전"><svg class="i" viewBox="0 0 24 24"><use href="#ic-rotate"/></svg><span>회전</span></button>
+      <button class="btn" id="rotBtn" title="고른 가구 90° 회전 (단축키 R · 가구 더블클릭)" aria-label="회전"><svg class="i" viewBox="0 0 24 24"><use href="#ic-rotate"/></svg><span>회전</span></button>
       <span class="sep"></span>
       <span class="grp" role="group" aria-label="단위">
         <button id="uMm" aria-pressed="true">mm</button>
@@ -1177,7 +1179,7 @@ ol.todo li:first-child{color:var(--ink-2);font-weight:500}
     <span class="sep"></span>
     <button class="btn" id="tapeBtn"><svg class="i" viewBox="0 0 24 24"><use href="#ic-tape"/></svg><span>줄자</span></button>
     <button class="btn" id="drawerBtn" aria-expanded="false"><svg class="i" viewBox="0 0 24 24"><use href="#ic-box"/></svg><span>보관함</span><b id="drawerNum">0</b></button>
-    <button class="btn" id="layBtn" aria-expanded="false"><svg class="i" viewBox="0 0 24 24"><use href="#ic-layers"/></svg><span>배치</span><b id="layNumBtn">0</b></button>
+    <button class="btn" id="layBtn" aria-expanded="false"><svg class="i" viewBox="0 0 24 24"><use href="#ic-layers"/></svg><span><span class="phw">저장한 </span>배치</span><b id="layNumBtn">0</b></button>
     <button class="btn quiet more" id="moreBtn" aria-expanded="false" aria-label="파일 메뉴"><svg class="i" viewBox="0 0 24 24"><use href="#ic-more"/></svg><span>파일</span></button>
     <span class="util" id="utilBar">
       <button class="btn quiet" id="bkBtn" title="배치를 파일로 백업하거나 불러오기" aria-label="백업"><svg class="i" viewBox="0 0 24 24"><use href="#ic-save"/></svg><span>백업</span></button>
@@ -1241,7 +1243,7 @@ ol.todo li:first-child{color:var(--ink-2);font-weight:500}
             <span><em style="background:#8A5BB8"></em>의류</span>
             <span><em style="background:#7A8B84"></em>기타</span>
           </p>
-          <p class="hint" style="margin-top:7px">가구를 누르면 규격과 벽까지 거리가 펼쳐지고,
+          <p class="hint" style="margin-top:7px">가구를 누르면 크기와 벽까지 거리가 펼쳐지고,
             서랍·의자가 나오는 자리가 도면에 표시됩니다.</p>
         </div>
 
@@ -1249,8 +1251,8 @@ ol.todo li:first-child{color:var(--ink-2);font-weight:500}
           <summary>방 정보</summary>
           <div class="fold-b">
             <div class="read"><dl>
-              <dt>내경</dt><dd id="rSize">—</dd>
-              <dt>천장고</dt><dd id="rCeil">—</dd>
+              <dt>방 안쪽 크기</dt><dd id="rSize">—</dd>
+              <dt>천장 높이</dt><dd id="rCeil">—</dd>
               <dt>바닥 면적</dt><dd id="rArea">—</dd>
               <dt>가구 점유</dt><dd id="occArea">—</dd>
               <dt>점유율</dt><dd id="occPct">—</dd>
@@ -1287,7 +1289,7 @@ ol.todo li:first-child{color:var(--ink-2);font-weight:500}
               <b>옮기기</b> 가구를 끌기<br>
               <b>재기</b> 상단 <kbd>줄자</kbd> → 양 끝을 끌어 맞추기<br>
               <b>회전</b> 90°씩 돕니다 — 가구를 <b>더블클릭</b> · <kbd>R</kbd> 키 ·
-              툴바와 «선택한 가구» 의 <b style="display:inline">회전</b> 버튼<br>
+              툴바와 «고른 것» 의 <b style="display:inline">회전</b> 버튼<br>
               <b>빼기</b> 목록의 <kbd>↪</kbd> · 또는 보관함을 연 채로 끌어다 놓기<br>
               <b>담기</b> 상단 <kbd>보관함</kbd> 을 열고 카드를 방 안으로<br>
               <b>배치안</b> 상단 <kbd>배치</kbd> — 저장과 불러오기가 한곳에 있습니다<br>
@@ -1368,7 +1370,7 @@ ol.todo li:first-child{color:var(--ink-2);font-weight:500}
       <div id="clashBox"></div>
 
       <div id="selWrap">
-        <p class="ph">선택한 가구</p>
+        <p class="ph">고른 것</p>
         <div class="read" id="selBox"><div class="empty">가구를 클릭하세요</div></div>
       </div>
 
@@ -1391,15 +1393,15 @@ ol.todo li:first-child{color:var(--ink-2);font-weight:500}
     <!-- p65 — 칩을 누르면 바로 방에 놓인다. 이름·크기를 직접 적는 칸은 «직접 입력» 을 눌러야 펼쳐진다 -->
     <button type="button" class="btn afown" id="afOwn"><svg class="i" viewBox="0 0 24 24"><use href="#ic-edit"/></svg><span>직접 입력 — 이름·크기를 적어서 넣기</span></button>
     <div class="afcustom" id="afCustom">
-    <div><label for="afName">항목명</label>
+    <div><label for="afName">이름</label>
       <input id="afName" type="text" placeholder="예: 협탁" maxlength="20"></div>
-    <div><label>규격 mm — 가로 / 깊이 / 높이</label>
+    <div><label>크기 mm — 가로 / 깊이 / 높이</label>
       <div class="row">
         <input id="afW" type="number" min="50" max="4000" step="10" placeholder="가로">
         <input id="afD" type="number" min="50" max="4000" step="10" placeholder="깊이">
         <input id="afH" type="number" min="50" max="3000" step="10" placeholder="높이">
       </div></div>
-    <div><label for="afF">앞 여유 mm — 서랍을 빼거나 의자를 물릴 자리</label>
+    <div><label for="afF">앞에 비울 자리 mm (서랍·의자)</label>
       <input id="afF" type="number" min="0" max="2000" step="10" placeholder="없으면 비워 두세요"></div>
     <label class="afchk"><input type="checkbox" id="afFix"><span>고정물 — 기둥·붙박이장처럼 옮길 수 없는 것<br><i>통로에는 들어가고, «더 나은 자리» 는 옮기지 않아요</i></span></label>
     </div>
@@ -1504,11 +1506,11 @@ ol.todo li:first-child{color:var(--ink-2);font-weight:500}
     </svg>
     <div><label for="rmName">방 이름</label>
       <input id="rmName" type="text" placeholder="예: 안방" maxlength="20"></div>
-    <div><label>내경 mm — 가로 / 세로 / 천장고</label>
+    <div><label>방 안쪽 크기 mm — 가로 / 세로 / 천장 높이</label>
       <div class="row">
         <input id="rmW" type="number" min="500" max="30000" step="10" placeholder="가로">
         <input id="rmD" type="number" min="500" max="30000" step="10" placeholder="세로">
-        <input id="rmH" type="number" min="1500" max="5000" step="10" placeholder="천장고">
+        <input id="rmH" type="number" min="1500" max="5000" step="10" placeholder="천장 높이">
       </div></div>
     <p class="hint" id="rmHint">벽 안쪽 기준으로 재서 넣으세요. 나중에 바꿀 수 있습니다.</p>
     <div class="acts">
@@ -1767,10 +1769,10 @@ const MY_ROOM = {
   doors:  [{ id:"D1", wall:"top",    x0:1710, w:750,  hinge:"end",   swing:"in" }],
   windows:[{ id:"W1", wall:"bottom", x0:130,  w:2200, sill:1000, head:2400 }],
   conf: { size:"확정", ceiling:"추정", door:"추정", window:"확인" },
-  todo: [ "문틀 안목 폭 — 회전 반경이 곧 옷장 배치 한계선",
-          "힌지에서 우측 벽까지 거리",
-          "창문 좌우 여백 · 천장고",
-          "가구별 벽 이격 · 걸레받이 두께",
+  todo: [ "문틀 안쪽 폭 — 문이 열리는 자리가 곧 옷장 놓을 한계선",
+          "문이 매달린 쪽에서 오른쪽 벽까지 거리",
+          "창문 좌우 여백 · 천장 높이",
+          "가구마다 벽에서 띄울 거리 · 걸레받이 두께",
           "콘센트 · 난방기 위치" ]
 };
 const CAT_COLOR = { sleep:"#5B8DEF", work:"#0D6552", storage:"#B0803A",
@@ -1836,7 +1838,7 @@ const ROOM_PRESETS = [
 ];
 
 /* 화면에 찍히는 판 번호. 실기에서 «고쳤는데 그대로다» 를 가르는 유일한 단서다. */
-const BUILD = "2026-10-04 · p66";
+const BUILD = "2026-10-04 · p67";
 
 const KEYOPT = "room-planner/opt";
 let opt = { score:true, walk:true, unit:"mm", guide:0 };
@@ -2453,7 +2455,7 @@ function drawHome(){
     g.appendChild(txt({ x:cx, y:cy + fs*0.85, "text-anchor":"middle", "font-size":fs*0.6,
       "font-family":"IBM Plex Mono,monospace" }, `${r.w} × ${r.d}`));
     g.appendChild(txt({ x:cx, y:cy + fs*1.6, "text-anchor":"middle", "font-size":fs*0.55,
-      "font-family":"IBM Plex Mono,monospace", opacity:.7 }, `가구 ${n}점`));
+      "font-family":"IBM Plex Mono,monospace", opacity:.7 }, `가구 ${n}개`));
     /* p59 — 마지막으로 들어간 방(화면 96×21px 칩, 방 왼쪽 위). 방이 칩보다 좁으면 안 붙인다 */
     const u = pxMm(1);
     if (opt.last === r.id && r.w > 112 * u && r.d > 37 * u){
@@ -2782,6 +2784,17 @@ function startPan(m, pt, e){
   bindMove();
 }
 
+/* p67 — 문 열림 빗금·경고 글자처럼 가구 «위에» 그린 표시가 누름을 가로채면, 그 아래 겹친 가구를 찾는다 */
+function fgUnder(e){
+  const t = (e.touches && e.touches[0]) || e;
+  if (t.clientX == null || !document.elementsFromPoint) return null;
+  for (const n of document.elementsFromPoint(t.clientX, t.clientY)){
+    if (n === svg) break;
+    const g = n.closest && n.closest("#plan .fg");
+    if (g) return g;
+  }
+  return null;
+}
 function onDown(e){
   if (e.button !== undefined && e.button !== 0) return;
   /* p47 — 보관함·배치 창이 열려 있을 때 바깥 도면을 누르면 창만 닫는다(그 누름은 다른 일을 하지 않는다) */
@@ -2852,7 +2865,7 @@ function onDown(e){
   }
   const oh = e.target && e.target.closest ? e.target.closest(".ophit") : null;
   if (oh){ startOpDrag(oh.getAttribute("data-op"), m, pt, e); return; }
-  const node = e.target && e.target.closest ? e.target.closest(".fg") : null;
+  const node = (e.target && e.target.closest ? e.target.closest(".fg") : null) || fgUnder(e);
   if (node){ startDrag(node.getAttribute("data-uid"), pt, false, e); return; }
   /* 빈 바닥 — «탭» 이면 고르기를 풀고, «끌기» 면 대지를 민다.
      ⚠️ select(null) 을 여기서 부르면 안 된다. 화면을 미는 동안에도 선택이 풀려 버린다.
@@ -4591,7 +4604,7 @@ function renderLists(){
     dl.appendChild(e);
   } else for (const it of out){ if (!(drag && drag.uid === it.uid)) dl.appendChild(cardFor(it)); }
   $("drawerNum").textContent = String(out.length);
-  $("drawerCnt").textContent = `${out.length}점`;
+  $("drawerCnt").textContent = `${out.length}개`;
   $("drawerFoot").textContent = mode === "room"
     ? `모든 방이 함께 쓰는 보관함입니다. 카드를 ${R() ? R().name : "방"} 안으로 끌어오세요.`
     : "모든 방이 함께 쓰는 보관함입니다. 방에 들어가서 꺼내 쓰세요.";
@@ -4604,7 +4617,7 @@ function renderLists(){
       b.className = "roomcard";
       b.innerHTML = `<span><span class="nm">${escapeHtml(r.name)}` +
         (r.sample ? '<em class="samp">둘러보기용</em>' : "") + `</span><br>` +
-        `<span class="sz">${r.w} × ${r.d} · 가구 ${n}점</span></span>` +
+        `<span class="sz">${r.w} × ${r.d} · 가구 ${n}개</span></span>` +
         `<span><i data-act="edit">수정</i></span>`;
       b.addEventListener("click", ev => {
         const t = ev.target.closest && ev.target.closest("[data-act]");
@@ -4619,8 +4632,8 @@ function renderLists(){
     for (const r of state.rooms) area += r.w * r.d;
     $("hRooms").textContent = `${state.rooms.length}개`;
     $("hArea").textContent  = (area/1e6).toFixed(2) + " m²";
-    $("hItems").textContent = `${state.items.filter(i => i.room !== null).length}점`;
-    $("hStore").textContent = `${out.length}점`;
+    $("hItems").textContent = `${state.items.filter(i => i.room !== null).length}개`;
+    $("hStore").textContent = `${out.length}개`;
     $("emptyHome").hidden = state.rooms.length > 0 || !!state.plan;
     return;
   }
@@ -4635,11 +4648,11 @@ function renderLists(){
   if (out.length){
     const sep = document.createElement("div");
     sep.className = "fsep";
-    sep.innerHTML = `<span>보관함</span><em>${out.length}점</em>`;
+    sep.innerHTML = `<span>보관함</span><em>${out.length}개</em>`;
     li.appendChild(sep);
     for (const it of out) li.appendChild(rowFor(it, hot, true));
   }
-  $("cntIn").textContent = `${inRoom().length}점` + (out.length ? ` · 보관 ${out.length}점` : "");
+  $("cntIn").textContent = `${inRoom().length}개` + (out.length ? ` · 보관 ${out.length}개` : "");
 
   const r = R();
   $("rSize").textContent = `${r.w} × ${r.d}`;
@@ -4943,7 +4956,7 @@ function renderCompare(){
     if (cases.length > 1 && c.sc && c.sc.total === bScore) col.classList.add("win");
 
     const h3 = document.createElement("h3");
-    h3.innerHTML = `<span>${escapeHtml(c.name)}</span><em>${escapeHtml(c.when || `가구 ${c.n}점`)}</em>`;
+    h3.innerHTML = `<span>${escapeHtml(c.name)}</span><em>${escapeHtml(c.when || `가구 ${c.n}개`)}</em>`;
     col.appendChild(h3);
     col.appendChild(c.svg);
 
@@ -4959,7 +4972,7 @@ function renderCompare(){
       `<dt>겹침</dt><dd class="${c.h.cl.length ? "bad" : ""}">${c.h.cl.length}건</dd>` +
       `<dt>문 반경</dt><dd class="${c.h.dh.length ? "bad" : ""}">${c.h.dh.length}건</dd>` +
       `<dt>바닥 점유</dt><dd>${c.occ}%</dd>` +
-      `<dt>가구</dt><dd>${c.n}점</dd>`;
+      `<dt>가구</dt><dd>${c.n}개</dd>`;
     col.appendChild(dl);
 
     if (c.id !== "__now"){
@@ -5040,14 +5053,14 @@ function renderConf(){
              : v === "확인" ? '<span class="flag">확인</span>'
              : '<span class="flag est">추정</span>';
   $("confBox").innerHTML = "<dl>" +
-    `<dt>내경</dt><dd>${r.w} × ${r.d} ${tag(c.size || "추정")}</dd>` +
-    `<dt>천장고</dt><dd>${r.ceiling} ${tag(c.ceiling || "추정")}</dd>` +
+    `<dt>방 안쪽 크기</dt><dd>${r.w} × ${r.d} ${tag(c.size || "추정")}</dd>` +
+    `<dt>천장 높이</dt><dd>${r.ceiling} ${tag(c.ceiling || "추정")}</dd>` +
     `<dt>문</dt><dd>${(r.doors || []).length}개 ${tag(c.door || "추정")}</dd>` +
     `<dt>창문</dt><dd>${(r.windows || []).length}개 ${tag(c.window || "추정")}</dd>` +
     "</dl>";
   const ol = $("todoList"); ol.replaceChildren();
   const todo = r.todo && r.todo.length ? r.todo
-    : ["방 내경 실측", "문틀 안목 폭", "창문 위치와 바닥에서의 높이", "천장고"];
+    : ["방 안쪽 크기 재기", "문틀 안쪽 폭", "창문 위치와 바닥에서의 높이", "천장 높이"];
   for (const t of todo){
     const li = document.createElement("li");
     li.textContent = t;
@@ -5216,7 +5229,7 @@ function renderSelBox(){
   const op = !it ? opObj() : null;
   if (op){ box.innerHTML = opBoxHtml(op); return; }
   /* 빈 상자를 둘 두지 않는다 — 무엇을 기대할지 한 문단으로 미리 알려 준다 */
-  if (!it){ box.innerHTML = '<p class="selhint">가구를 누르면 규격과 네 벽까지의 거리, ' +
+  if (!it){ box.innerHTML = '<p class="selhint">가구를 누르면 크기와 네 벽까지의 거리, ' +
     '그리고 «더 나은 자리» 가 여기 나옵니다.</p>'; return; }
   const sp = spec(it), u = unitLabel();
   /* p36 — 치수·이름 고치기와 복제. 폰은 고른 가구 줄의 이름을 누르면 오는 «상태» 시트에서 같은 버튼 */
@@ -5483,7 +5496,7 @@ $("rmSave").addEventListener("click", () => {
                        ceiling:clampInt(h,1500,5000), x:Math.round(x), y:Math.round(y),
                        doors:[], windows:[], layouts:[],
                        conf:{ size:"추정", ceiling:"추정", door:"추정", window:"추정" },
-                       todo:["방 내경 실측", "문틀 안목 폭", "창문 위치와 바닥에서의 높이", "천장고"] });
+                       todo:["방 안쪽 크기 재기", "문틀 안쪽 폭", "창문 위치와 바닥에서의 높이", "천장 높이"] });
     candidates = candidates.filter(c => !roomEditRect ||
       !(c.x === roomEditRect.x && c.y === roomEditRect.y));
     toast(`${name} 추가`);
@@ -6120,7 +6133,7 @@ function setAddMode(uid){
   $("afMore").hidden = !edit;
   $("afPre").parentElement.hidden = edit;       /* 고칠 때는 이름·치수가 먼저 보여야 한다 */
   if (!edit){ $("afFix").checked = false; afPick = null; }
-  $("afHint").innerHTML = edit ? "이 가구만 바뀝니다. 같은 규격을 쓰는 다른 가구는 그대로 둡니다.<br>자리는 왼쪽 위 모서리를 기준으로 유지됩니다." : afHint();
+  $("afHint").innerHTML = edit ? "이 가구만 바뀝니다. 같은 크기를 쓰는 다른 가구는 그대로 둡니다.<br>자리는 왼쪽 위 모서리를 기준으로 유지됩니다." : afHint();
   setOwn(edit);
   for (const q of $("afPre").querySelectorAll(".prechip")) q.classList.remove("on");
 }
@@ -6197,7 +6210,7 @@ addModal.addEventListener("click", e => { if (e.target === addModal) addModal.cl
 $("afAdd").addEventListener("click", () => {
   const name = $("afName").value.trim();
   const w = Number($("afW").value), d = Number($("afD").value), h = Number($("afH").value);
-  if (!name) return toast("항목명을 적어 주세요");
+  if (!name) return toast("이름을 적어 주세요");
   if (![w,d,h].every(v => Number.isFinite(v) && v >= 50 && v <= 4000))
     return toast("가로·깊이·높이를 50~4000 사이로 적어 주세요");
   if (addModal.dataset.edit) return saveEditItem(addModal.dataset.edit, name, w, d, h);
@@ -6726,7 +6739,7 @@ function startNewRoom(){
   state.rooms.push({ id, name, w, d, ceiling:2400, x:Math.round(x), y:0,
                      doors:[], windows:[], layouts:[],
                      conf:{ size:"확정", ceiling:"추정", door:"추정", window:"추정" },
-                     todo:["문 위치와 폭", "창문 위치와 바닥에서의 높이", "천장고"] });
+                     todo:["문 위치와 폭", "창문 위치와 바닥에서의 높이", "천장 높이"] });
   commit(before);
   introLand(id);
 }
@@ -7336,7 +7349,7 @@ const GUIDE = [
    d:"«추가» 에서 문이나 창문을 고르면 반투명한 미리보기가 나옵니다. 끌거나 벽을 눌러 자리를 맞추고, 양 끝 점을 끌어 폭을 바꾼 뒤 «놓기». 문은 «안으로/밖으로»·«반대쪽» 으로 여는 쪽을 고르고, 창문은 «보통 창» 과 바닥까지 내려오는 «거실 창» 중에서 고르세요. 콘센트는 벽을 누르면 바로 놓이고, 앞을 가구가 막으면 황토색으로 알려 줍니다(점수와는 상관없음). 세밀한 치수는 «수정».",
    img:"guide/02.webp", w:1040, h:821 },
  { t:"가구 놓기",
-   d:"«흔한 크기» 를 누르면 방 빈자리에 바로 놓입니다 — 끌어서 옮기세요. 크기를 아는 가구는 «직접 입력» 에서 이름·크기·앞 여유(서랍을 빼거나 의자를 물릴 자리)를 적습니다. 기둥·붙박이장·라디에이터처럼 옮길 수 없는 것은 맨 아래 «고정물» 에서 고르세요 — 통로에는 들어가고 추천은 옮기지 않습니다.",
+   d:"«흔한 크기» 를 누르면 방 빈자리에 바로 놓입니다 — 끌어서 옮기세요. 크기를 아는 가구는 «직접 입력» 에서 이름·크기·앞에 비울 자리(서랍·의자)를 적습니다. 기둥·붙박이장·라디에이터처럼 옮길 수 없는 것은 맨 아래 «고정물» 에서 고르세요 — 통로에는 들어가고 추천은 옮기지 않습니다.",
    img:"guide/03.webp", w:474, h:900 },
  { t:"끌어서 옮기기",
    d:"끌면 벽과 이웃 가구에 저절로 붙습니다. 고른 가구는 가장 가까운 벽이나 가구까지의 거리가 도면에, 네 벽까지의 거리는 오른쪽에 나오고, 겹치면 빨갛게 표시됩니다. 같은 칸의 «치수 수정»·«복제» 로 크기를 고치거나 하나 더 놓을 수 있습니다.",
