@@ -138,11 +138,11 @@ const APP = 'file://' + (process.env.APP || (process.env.WORK || '/home/claude/w
       && (await T(p, '#toast')) === '방을 누르면 가구를 놓을 수 있어요', '움직임 줄이기: 날기·빛남 없이 집 화면 바로 + 안내');
   await c.close();
 
-  /* ⑧ 다크·폰 360×640: 한 화면에 다 들어감 */
+  /* ⑧ 다크 기기·폰 360×640: 한 화면에 다 들어감 · p64 부터 기기가 다크여도 밝게 */
   [c, p] = await open({ dark: 1, mob: 1, vp: { width: 360, height: 640 } }); await p.waitForTimeout(2400);
   const bot = await p.$eval('#isPeek', n => Math.round(n.getBoundingClientRect().bottom));
   chk(bot <= 640, '폰 360×640: 둘러보기 글자까지 한 화면');
-  chk(await p.$eval('#intro', n => getComputedStyle(n).backgroundColor) === 'rgb(11, 18, 16)', '다크: 어두운 종이색 바탕');
+  chk(await p.$eval('#intro', n => getComputedStyle(n).backgroundColor) === 'rgb(238, 242, 240)', '기기 다크여도 밝은 종이색 바탕(p64)');
   await c.close();
 
   console.log('pageerror :', errs.length, errs);

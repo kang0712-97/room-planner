@@ -23,6 +23,7 @@
 <meta name="apple-mobile-web-app-title" content="어디다 두지">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <title>이걸 어디다 두지?</title>
+<script>/* p64 — 고른 화면 밝기를 그리기 전에 붙인다(다시 열 때 번쩍임 없음) */try{var o=JSON.parse(localStorage.getItem("room-planner/opt")||"null");if(o&&o.theme==="dark")document.documentElement.setAttribute("data-theme","dark")}catch(e){}</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans+KR:wght@400;500;600;700&display=swap">
@@ -38,18 +39,9 @@
   --bad:#C0392B; --bad-soft:#FBE7E4;
   --tabh:58px; --crumbh:44px;
 }
-@media (prefers-color-scheme: dark){
-  :root:not([data-theme="light"]){
-    --paper:#0B1210; --surface:#141E1A; --surface-2:#1C2823; --sunk:#101A16;
-    --ink:#E5EDE9; --ink-2:#B7C6C0; --muted:#8A9C95;
-    --line:#26332E; --line-strong:#3D4F48;
-    --accent:#4CC3A3; --accent-soft:#12312A; --accent-ink:#7EDBC1;
-    --measure:#E39366; --measure-soft:#2F2016;
-    --lock:#D2B764; --lock-soft:#2C2614; --preview:#6AA6FF; --preview-soft:#14233A;
-    --bad:#F1705E; --bad-soft:#331915;
-  }
-}
+/* p64 — 기기 다크 설정을 따르지 않는다. 기본은 밝게, «어둡게» 를 고르면 <html data-theme="dark"> */
 :root[data-theme="dark"]{
+  color-scheme:dark;
   --paper:#0B1210; --surface:#141E1A; --surface-2:#1C2823; --sunk:#101A16;
   --ink:#E5EDE9; --ink-2:#B7C6C0; --muted:#8A9C95;
   --line:#26332E; --line-strong:#3D4F48;
@@ -1066,6 +1058,8 @@ ol.todo li:first-child{color:var(--ink-2);font-weight:500}
 </head>
 <body>
 <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><defs>
+  <g id="ic-moon"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/></g>
+  <g id="ic-sun"><circle cx="12" cy="12" r="4"/><path d="M12 2.5v2.5M12 19v2.5M2.5 12H5M19 12h2.5M5.3 5.3l1.8 1.8M16.9 16.9l1.8 1.8M5.3 18.7l1.8-1.8M16.9 7.1l1.8-1.8"/></g>
   <g id="ic-home"><path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></g>
   <g id="ic-roomadd"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M12 9v6M9 12h6"/></g>
   <g id="ic-plan"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="m3 16 5-4 4 3 3-3 6 5"/><circle cx="8.5" cy="9" r="1.4"/></g>
@@ -1165,6 +1159,8 @@ ol.todo li:first-child{color:var(--ink-2);font-weight:500}
     <span class="util" id="utilBar">
       <button class="btn quiet" id="bkBtn" title="배치를 파일로 백업하거나 불러오기" aria-label="백업"><svg class="i" viewBox="0 0 24 24"><use href="#ic-save"/></svg><span>백업</span></button>
       <button class="btn quiet" id="helpBtn" title="사용법" aria-label="사용법"><svg class="i" viewBox="0 0 24 24"><use href="#ic-help"/></svg><span>사용법</span></button>
+      <!-- p64 — 화면 밝기(기본 밝게). 글자는 누르면 바뀔 쪽 -->
+      <button class="btn quiet" id="themeBtn" title="어두운 화면으로" aria-label="어두운 화면으로"><svg class="i" viewBox="0 0 24 24"><use href="#ic-moon"/></svg><span>어둡게</span></button>
       <button class="btn quiet" id="shareBtn" title="이 방 배치를 링크로 보내기" aria-label="링크 공유"><svg class="i" viewBox="0 0 24 24"><use href="#ic-link"/></svg><span>공유</span></button>
       <!-- p45 — 홈 화면에 앱으로 추가(폰에서만, 설치할 수 있을 때만 보인다) -->
       <button class="btn quiet" id="installBtn" title="홈 화면에 앱으로 추가" aria-label="홈 화면에 추가" hidden><svg class="i" viewBox="0 0 24 24"><use href="#ic-home"/></svg><span>홈 화면에 추가</span></button>
@@ -1805,7 +1801,7 @@ const ROOM_PRESETS = [
 ];
 
 /* 화면에 찍히는 판 번호. 실기에서 «고쳤는데 그대로다» 를 가르는 유일한 단서다. */
-const BUILD = "2026-10-04 · p63";
+const BUILD = "2026-10-04 · p64";
 
 const KEYOPT = "room-planner/opt";
 let opt = { score:true, walk:true, unit:"mm", guide:0 };
@@ -6277,6 +6273,18 @@ $("moreBtn").addEventListener("click", () => {
   $("utilBar").classList.toggle("open", open);
   $("moreBtn").setAttribute("aria-expanded", String(open));
 });
+/* p64 — 화면 밝기. 기본 밝게, 고르면 opt.theme 에 남아 설치 앱을 닫았다 열어도 그대로 */
+function syncTheme(){
+  const dark = opt.theme === "dark", b = $("themeBtn"), t = dark ? "밝은 화면으로" : "어두운 화면으로";
+  if (dark) document.documentElement.setAttribute("data-theme", "dark");
+  else document.documentElement.removeAttribute("data-theme");
+  b.querySelector("use").setAttribute("href", dark ? "#ic-sun" : "#ic-moon");
+  b.querySelector("span").textContent = dark ? "밝게" : "어둡게";
+  b.title = t; b.setAttribute("aria-label", t);
+}
+$("themeBtn").addEventListener("click", () => {
+  opt.theme = opt.theme === "dark" ? "light" : "dark"; saveOpt(); syncTheme();
+});
 $("undoBtn").addEventListener("click", undo);
 $("redoBtn").addEventListener("click", redo);
 $("zIn").addEventListener("click", () => zoomBy(1/1.3));
@@ -7303,6 +7311,7 @@ const GUIDE = [
 
 /* ============ 시작 ============ */
 loadOpt();
+syncTheme();
 showWalk = opt.walk !== false;
 showScore = opt.score !== false;
 unit = opt.unit === "cm" ? "cm" : "mm";
