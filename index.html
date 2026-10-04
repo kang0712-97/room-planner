@@ -130,8 +130,9 @@ button{font:inherit;color:inherit;cursor:pointer}
     padding-top:8px;border-top:1px solid var(--line)}
   .bar .util.open{display:flex}
 }
-/* p64c — 넓은 화면 «방» 위 줄은 꽉 차 있다(우분투 글꼴 기준 아이콘 하나도 넘침) → 화면 밝기는 집 화면 위 줄에서만 */
-@media(min-width:1501px){ body.inroom .bar #themeBtn{display:none} }
+/* p64d — 넓은 화면 위 줄은 꽉 차 있다(우분투 글꼴에선 아이콘 하나도 넘침) → 화면 밝기는 도면 오른쪽 아래 묶음으로 */
+.zoomer #themeBtn2{display:none}
+@media(min-width:1501px){ .bar #themeBtn{display:none} .zoomer #themeBtn2{display:inline-flex;margin-bottom:6px} }
 
 .work{flex:1;display:grid;grid-template-columns:262px minmax(0,1fr) 268px;min-height:0}
 @media(max-width:1100px){
@@ -1317,6 +1318,8 @@ ol.todo li:first-child{color:var(--ink-2);font-weight:500}
       <!-- p47 — 폰: 줄자는 «도구» 시트 속이 아니라 도면 왼쪽 위에 바로(엄지로 닿고 도면을 덜 가린다). 데스크톱은 툴바 그대로 -->
       <button type="button" class="tapefab" id="tapeFab" title="줄자" aria-label="줄자" aria-pressed="false" hidden><svg class="i" viewBox="0 0 24 24"><use href="#ic-tape"/></svg><span>줄자</span></button>
       <div class="zoomer">
+        <!-- p64d — 넓은 화면(1501px 이상)에서만 보이는 화면 밝기. 좁은 화면·폰은 «파일»/«도구» 의 #themeBtn -->
+        <button id="themeBtn2" title="어두운 화면으로" aria-label="어두운 화면으로"><svg class="i" viewBox="0 0 24 24"><use href="#ic-moon"/></svg></button>
         <button id="zIn" title="확대" aria-label="확대">+</button>
         <button id="zOut" title="축소" aria-label="축소">−</button>
         <button id="undoBtn" disabled title="되돌리기 Ctrl+Z" aria-label="되돌리기"><svg class="i" viewBox="0 0 24 24"><use href="#ic-undo"/></svg></button>
@@ -4426,7 +4429,7 @@ function goHome(){
   mode = "home"; curRoom = null; sel = null; placing = null; ghost = null; opSel = null; setTool(null);
   $("brand").hidden = false;     /* p56 — 앱 이름은 집 화면에서만 */
   $("homeTools").style.display = "flex";
-  $("roomTools").style.display = "none"; document.body.classList.remove("inroom");
+  $("roomTools").style.display = "none";
   $("homePanel").hidden = false;
   $("roomPanel").hidden = true;
   $("selWrap").hidden = true;
@@ -4445,7 +4448,7 @@ function enterRoom(rid){
   $("brand").hidden = true;
   if (opt.last !== rid){ opt.last = rid; saveOpt(); }     /* p59 — 다음 방문에 «마지막으로 본 방» */
   $("homeTools").style.display = "none";
-  $("roomTools").style.display = "flex"; document.body.classList.add("inroom");
+  $("roomTools").style.display = "flex";
   $("homePanel").hidden = true;
   $("roomPanel").hidden = false;
   $("selWrap").hidden = false;
@@ -6277,14 +6280,16 @@ $("moreBtn").addEventListener("click", () => {
 });
 /* p64 — 화면 밝기. 기본 밝게, 고르면 opt.theme 에 남아 설치 앱을 닫았다 열어도 그대로 */
 function syncTheme(){
-  const dark = opt.theme === "dark", b = $("themeBtn"), t = dark ? "밝은 화면으로" : "어두운 화면으로";
+  const dark = opt.theme === "dark", t = dark ? "밝은 화면으로" : "어두운 화면으로";
   if (dark) document.documentElement.setAttribute("data-theme", "dark");
   else document.documentElement.removeAttribute("data-theme");
-  b.querySelector("use").setAttribute("href", dark ? "#ic-sun" : "#ic-moon");
-  b.querySelector("span").textContent = dark ? "밝게" : "어둡게";
-  b.title = t; b.setAttribute("aria-label", t);
+  for (const b of [$("themeBtn"), $("themeBtn2")]){
+    b.querySelector("use").setAttribute("href", dark ? "#ic-sun" : "#ic-moon");
+    b.title = t; b.setAttribute("aria-label", t);
+  }
+  $("themeBtn").querySelector("span").textContent = dark ? "밝게" : "어둡게";
 }
-$("themeBtn").addEventListener("click", () => {
+for (const id of ["themeBtn", "themeBtn2"]) $(id).addEventListener("click", () => {
   opt.theme = opt.theme === "dark" ? "light" : "dark"; saveOpt(); syncTheme();
 });
 $("undoBtn").addEventListener("click", undo);

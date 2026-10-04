@@ -23,19 +23,20 @@ const APP = 'file://' + (process.env.APP || (process.env.WORK || '/home/claude/w
   await home(p);
   chk(await bg(p, 'body') === LIGHT, '기기 다크: 집 화면도 밝게');
   console.log('단추 :', await btn(p));
-  chk(await p.$eval('#themeBtn', n => n.getBoundingClientRect().width > 0), '1600: 위 줄에 «어둡게» 단추가 보임');
+  chk(!(await p.isVisible('#themeBtn')) && await p.isVisible('#themeBtn2'), '1600: 위 줄엔 없고 도면 오른쪽 아래 동그라미 단추');
+  const zt = await p.$eval('#themeBtn2', n => { const r = n.getBoundingClientRect(), e = document.elementFromPoint(r.x + r.width / 2, r.y + r.height / 2); return e === n || n.contains(e); });
+  chk(zt, '1600: 동그라미 단추가 맨 위에서 눌림');
   const bar = await p.$eval('.bar', n => Math.round(n.getBoundingClientRect().height));
   chk(bar <= 60, '1600: 위 줄 한 줄 유지(60px 이하)');
 
   await p.click('#roomList .roomcard .nm'); await p.waitForTimeout(300);
   const bar2 = await p.$eval('.bar', n => Math.round(n.getBoundingClientRect().height));
   chk(bar2 <= 60, '1600 방 화면: 위 줄 한 줄 유지(60px 이하)');
-  chk(await p.$eval('#themeBtn', n => getComputedStyle(n).display) === 'none', '1600 방 화면: 화면 밝기 단추는 빠짐(집 화면에서)');
+  chk(await p.isVisible('#themeBtn2'), '1600 방 화면에도 동그라미 단추');
   await p.click('#goHome'); await p.waitForTimeout(300);
-  chk(await p.isVisible('#themeBtn'), '1600 집 화면으로 나오면 다시 보임');
 
   /* ② 누르면 어둡게 + 저장 */
-  await p.click('#themeBtn'); await p.waitForTimeout(100);
+  await p.click('#themeBtn2'); await p.waitForTimeout(100);
   chk(await theme(p) === 'dark' && await bg(p, 'body') === DARK, '«어둡게» 누르면 어두운 종이색');
   chk(await p.evaluate(() => getComputedStyle(document.documentElement).colorScheme) === 'dark', '어둡게: color-scheme dark');
   console.log('단추 :', await btn(p), '· 저장 :', await saved(p));
@@ -47,11 +48,20 @@ const APP = 'file://' + (process.env.APP || (process.env.WORK || '/home/claude/w
 
   /* ④ 다시 누르면 밝게 + 저장 */
   await home(p);
-  await p.click('#themeBtn'); await p.waitForTimeout(100);
+  await p.click('#themeBtn2'); await p.waitForTimeout(100);
   chk(await theme(p) === null && await bg(p, 'body') === LIGHT, '«밝게» 누르면 다시 밝게');
   console.log('단추 :', await btn(p), '· 저장 :', await saved(p));
   await p.reload(); await p.waitForTimeout(300);
   chk(await theme(p) === null && await bg(p, 'body') === LIGHT, '다시 열어도 밝게');
+  await c.close();
+
+  /* ④-2 1440: «파일» 메뉴 속 글자 단추 */
+  [c, p] = await open({ vp: { width: 1440, height: 900 } }); await home(p);
+  chk(!(await p.isVisible('#themeBtn2')), '1440: 동그라미 단추 없음');
+  await p.click('#moreBtn'); await p.waitForTimeout(200);
+  chk(await p.isVisible('#themeBtn') && (await p.$eval('#themeBtn', n => n.textContent.trim())) === '어둡게', '1440: «파일» 메뉴에 «어둡게»');
+  await p.click('#themeBtn'); await p.waitForTimeout(100);
+  chk(await theme(p) === 'dark', '1440: 누르면 어둡게');
   await c.close();
 
   /* ⑤ 폰 360 · 기기 다크: «도구» 시트에서 바꾸기 */
@@ -61,7 +71,7 @@ const APP = 'file://' + (process.env.APP || (process.env.WORK || '/home/claude/w
   await p.click('#tabbar [data-tab="more"]'); await p.waitForTimeout(400);
   const r = await p.$eval('#themeBtn', n => { const b = n.getBoundingClientRect(); return [Math.round(b.width), Math.round(b.height)]; });
   chk(r[0] >= 32 && r[1] >= 32, '폰 «도구» 시트에 단추(32px 이상)');
-  chk(await p.$eval('#themeBtn span', n => getComputedStyle(n).display) !== 'none', '폰: 글자 «어둡게» 도 보임');
+  chk(await p.$eval('#themeBtn span', n => getComputedStyle(n).display) !== 'none' && !(await p.isVisible('#themeBtn2')), '폰: 글자 «어둡게» 도 보임 · 동그라미 단추 없음');
   await p.click('#themeBtn'); await p.waitForTimeout(100);
   chk(await theme(p) === 'dark' && await bg(p, 'body') === DARK, '폰: 누르면 어둡게');
   await p.reload(); await p.waitForTimeout(300);
