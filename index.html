@@ -130,8 +130,8 @@ button{font:inherit;color:inherit;cursor:pointer}
     padding-top:8px;border-top:1px solid var(--line)}
   .bar .util.open{display:flex}
 }
-/* p64b — 위 줄에 바로 놓일 때 화면 밝기는 아이콘만(우분투 글꼴에선 1600px 방 화면 위 줄이 꽉 찬다) */
-@media(min-width:1501px){ .bar #themeBtn span{display:none} }
+/* p64c — 넓은 화면 «방» 위 줄은 꽉 차 있다(우분투 글꼴 기준 아이콘 하나도 넘침) → 화면 밝기는 집 화면 위 줄에서만 */
+@media(min-width:1501px){ body.inroom .bar #themeBtn{display:none} }
 
 .work{flex:1;display:grid;grid-template-columns:262px minmax(0,1fr) 268px;min-height:0}
 @media(max-width:1100px){
@@ -4426,7 +4426,7 @@ function goHome(){
   mode = "home"; curRoom = null; sel = null; placing = null; ghost = null; opSel = null; setTool(null);
   $("brand").hidden = false;     /* p56 — 앱 이름은 집 화면에서만 */
   $("homeTools").style.display = "flex";
-  $("roomTools").style.display = "none";
+  $("roomTools").style.display = "none"; document.body.classList.remove("inroom");
   $("homePanel").hidden = false;
   $("roomPanel").hidden = true;
   $("selWrap").hidden = true;
@@ -4445,7 +4445,7 @@ function enterRoom(rid){
   $("brand").hidden = true;
   if (opt.last !== rid){ opt.last = rid; saveOpt(); }     /* p59 — 다음 방문에 «마지막으로 본 방» */
   $("homeTools").style.display = "none";
-  $("roomTools").style.display = "flex";
+  $("roomTools").style.display = "flex"; document.body.classList.add("inroom");
   $("homePanel").hidden = true;
   $("roomPanel").hidden = false;
   $("selWrap").hidden = false;
