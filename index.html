@@ -1415,7 +1415,6 @@ ol.todo li:first-child{color:var(--ink-2);font-weight:500}
   <!-- p65 — 회전도 줄에 되살림(두 번 누르기를 모르는 사람이 많다) -->
   <button type="button" class="sb-act" data-sb="rot" aria-label="90° 회전"><svg class="i" viewBox="0 0 24 24"><use href="#ic-rotate"/></svg><span>회전</span></button>
   <button type="button" class="sb-act" data-sb="edit" aria-label="이름·치수 수정"><svg class="i" viewBox="0 0 24 24"><use href="#ic-edit"/></svg><span>수정</span></button>
-  <button type="button" class="sb-act" data-sb="dup" aria-label="복제"><svg class="i" viewBox="0 0 24 24"><use href="#ic-copy"/></svg><span>복제</span></button>
   <!-- p46 — 사용자 요청: 고른 가구 줄에서 바로 보관·삭제(p37 에 수정 창 안으로 옮겼던 것을 되살림) -->
   <button type="button" class="sb-act" data-sb="store" aria-label="보관함에 넣기"><svg class="i" viewBox="0 0 24 24"><use href="#ic-box"/></svg><span id="sbStoreL">보관</span></button>
   <button type="button" class="sb-act danger" data-sb="del" aria-label="삭제"><svg class="i" viewBox="0 0 24 24"><use href="#ic-trash"/></svg><span>삭제</span></button>
@@ -6800,7 +6799,6 @@ $("selbar").addEventListener("click", e => {
   if (!a){ openSheet("stat"); return; }
   if (a === "rot")       rotate(sel);                                   /* p65 */
   else if (a === "edit") openEditItem(sel);
-  else if (a === "dup")  duplicateItem(sel);
   else if (a === "spot") phoneSpot(sel);
   else if (a === "store"){ const it = ITEM(sel); if (it && it.room === null) takeItem(sel); else storeItem(sel); }   /* p46 */
   else if (a === "del")  removeItem(sel);
@@ -6826,7 +6824,7 @@ function syncPhone(){
     $("sbSz").textContent = it.room === null
       ? `보관함 · ${fmt(sp.w)} × ${fmt(sp.d)}`
       : `${fmt(f.w)} × ${fmt(f.d)} · ${it.rot}°`;
-    $("selbar").querySelector('[data-sb="dup"]').hidden = $("selbar").querySelector('[data-sb="rot"]').hidden = it.room === null;      /* p47 — «자리 찾기» 는 뺐다(사용자 요청) */
+    $("selbar").querySelector('[data-sb="rot"]').hidden = it.room === null;   /* p65 — 복제는 폰 줄에서 뺐다(사용자 요청) */      /* p47 — «자리 찾기» 는 뺐다(사용자 요청) */
     $("sbStoreL").textContent = it.room === null ? "꺼내기" : "보관";          /* p46 — 보관함 가구는 «꺼내기» */
   }
   /* p51 — 고른 문·창문·콘센트 줄(#opbar)과 «벽을 누르세요» 띠 */

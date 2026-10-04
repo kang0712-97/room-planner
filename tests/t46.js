@@ -23,7 +23,7 @@ const FILE = process.env.APP || WORK + '/app.html', DIR = path.dirname(FILE);
       const info = document.getElementById('sbInfo').getBoundingClientRect();
       return { labels: acts.map(n => n.textContent.trim()), small: acts.filter(n => { const r = n.getBoundingClientRect(); return r.width < 44 || r.height < 44; }).length,
         over: s.scrollWidth > s.clientWidth + 1, right: Math.max(...acts.map(n => n.getBoundingClientRect().right)) <= innerWidth, info: Math.round(info.width), nm: document.getElementById('sbNm').textContent }; });
-    chk(bar.labels.join('·') === '회전·수정·복제·보관·삭제' && bar.small === 0 && !bar.over && bar.right,
+    chk(bar.labels.join('·') === '회전·수정·보관·삭제' && bar.small === 0 && !bar.over && bar.right,
         `${W}px: 고른 가구 줄 [${bar.labels.join(' · ')}] 44px 이상 · 화면 안 · 이름 칸 ${bar.info}px («${bar.nm}»)`);
     if (W === 360) { chk(bar.info >= 60, `360px 에서도 이름 칸 60px 이상 (${bar.info}px)`); await c.close(); continue; }
     await p.screenshot({ path: WORK + '/p46_selbar.png' });
