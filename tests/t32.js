@@ -26,7 +26,7 @@ const APP = 'file://' + (process.env.APP || (process.env.WORK || '/home/claude/w
   chk(!/100\s*\|\s*훌륭/.test(box) && box.includes('아직 가구가 없어요'), '상태: ' + box.slice(0, 90));
   await p.screenshot({ path:'p32_empty.png' });
   await p.tap('#tabbar [data-tab="add"]'); await p.waitForTimeout(400); await p.tap('#apModal [data-ap="furn"]'); await p.waitForTimeout(500);
-  const pre = await p.$$('#afPre button'); await pre[1].tap(); await p.tap('#afAdd'); await p.waitForTimeout(800);
+  const pre = await p.$$('#afPre button'); await pre[1].tap(); await p.waitForTimeout(800);
   chk(await p.$$eval('#plan .walkband', e => e.length) >= 1, '가구 하나 놓으면 통로 원이 나온다');
   chk(!(await p.textContent('#miniStat')).includes('가구를 놓으면'), '알약: ' + await p.textContent('#miniStat'));
   chk((await overlaps(p)).length === 0, '글자 겹침 0 (가구 1개)');

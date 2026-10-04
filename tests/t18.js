@@ -23,8 +23,7 @@ const chromium = require('playwright')[process.env.BROWSER || 'chromium'];   // 
 
   // 가구 하나 놓기 (프리셋)
   await p.click('#addBtn'); await p.waitForTimeout(350);
-  await p.click('.prechip:has-text("슈퍼싱글 침대")'); await p.waitForTimeout(120);
-  await p.click('#afAdd'); await p.waitForTimeout(400);
+  await p.click('.prechip:has-text("슈퍼싱글 침대")'); await p.waitForTimeout(520);   // p65 — 칩 하나로 방에
   console.log('가구 추가 :', await T(p, '#toast'));
   console.log('방 안 가구 :', await p.$$eval('#listIn .fitem .nm', ns => ns.map(n => n.textContent)));
   console.log('점수      :', await T(p, '.score-h'));

@@ -18,8 +18,7 @@ const APP = 'file://' + (process.env.APP || (process.env.WORK || '/home/claude/w
       const cid = s.catalog.find(k => k.name === nm).id; Object.assign(s.items.find(i => i.cat === cid), v);
       localStorage.setItem('room-planner/3', JSON.stringify(s)); }, [nm, v]); await reload(); };
   const addPreset = async nm => { await p.click('#addBtn'); await p.waitForTimeout(300);
-    await p.click(`#afPre button:has-text("${nm}")`); await p.waitForTimeout(100);
-    const fx = await p.isChecked('#afFix'); await p.click('#afAdd'); await p.waitForTimeout(600); return fx; };
+    await p.click(`#afPre button:has-text("${nm}")`); await p.waitForTimeout(600); return true; };   // p65 — 칩 하나로 방에
   await p.goto(APP); await p.waitForTimeout(700); await p.click('#isPeek'); await p.waitForTimeout(1500);
   if (await p.$('#guide.open')) { await p.keyboard.press('Escape'); await p.waitForTimeout(300); }
   const w0 = await walk(), sc0 = await score();
@@ -27,11 +26,11 @@ const APP = 'file://' + (process.env.APP || (process.env.WORK || '/home/claude/w
   chk(await p.$$eval('#afPre .pregrp', e => e.some(x => x.textContent.includes('고정물'))), '«흔한 크기» 에 고정물 묶음');
   const fx = await addPreset('기둥');
   let s = await st(); const col = s.catalog.find(k => k.name === '기둥');
-  chk(fx && col && col.fixed === true, '기둥 누르면 «고정물» 체크 → 카탈로그 fixed');
+  chk(fx && col && col.fixed === true, '기둥 누르면 바로 놓이고 카탈로그 fixed');
   chk((await p.$$('#plan .fg.fixed rect.hatch')).length === 1, '도면에 빗금 고정물 1개');
   // 싱글 침대(일반 가구)는 고정물 아님
-  await p.click('#addBtn'); await p.waitForTimeout(200); await p.click('#afPre button:has-text("협탁")');
-  chk(!(await p.isChecked('#afFix')), '일반 가구 누르면 체크 해제'); await p.click('#afCancel');
+  await p.click('#addBtn'); await p.waitForTimeout(200); await p.click('#afOwn');
+  chk(!(await p.isChecked('#afFix')), '«직접 입력» 칸은 고정물 체크 해제'); await p.click('#afCancel');
   // 기둥을 통로 한가운데로
   await put('기둥', { x:1500, y:2350, rot:0 });
   const w1 = await walk(); chk(w1 < 771, `통로 한가운데 기둥 → 최소 통로 771 → ${w1}`);
@@ -72,9 +71,9 @@ const APP = 'file://' + (process.env.APP || (process.env.WORK || '/home/claude/w
   await p.goto(APP); await p.waitForTimeout(700); await p.tap('#isPeek'); await p.waitForTimeout(1500);
   if (await p.$('#guide.open')) { await p.keyboard.press('Escape'); await p.waitForTimeout(300); }
   await p.tap('#tabbar [data-tab="add"]'); await p.waitForTimeout(300); await p.tap('#apModal [data-ap="furn"]'); await p.waitForTimeout(400);
-  await p.locator('#afPre button:has-text("기둥")').scrollIntoViewIfNeeded(); await p.tap('#afPre button:has-text("기둥")'); await p.tap('#afAdd'); await p.waitForTimeout(700);
+  await p.locator('#afPre button:has-text("기둥")').scrollIntoViewIfNeeded(); await p.tap('#afPre button:has-text("기둥")'); await p.waitForTimeout(700);
   const vis = await p.$$eval('#selbar .sb-act', ns => ns.filter(n => !n.hidden).map(n => n.textContent.trim()));
-  chk(vis.join() === '수정,복제,보관,삭제', '폰 고정물 고르면 줄: ' + vis.join(' · '));   // p47 — 자리 찾기는 이제 모두에게 없음   // p46 — 보관·삭제 되살림(자리 찾기는 고정물이라 숨김)
+  chk(vis.join() === '회전,수정,복제,보관,삭제', '폰 고정물 고르면 줄: ' + vis.join(' · '));   // p47 — 자리 찾기는 이제 모두에게 없음   // p46 — 보관·삭제 되살림(자리 찾기는 고정물이라 숨김)
   await p.tap('#sbInfo'); await p.waitForTimeout(400);
   chk(!(await p.isVisible('#selEdit')) && !(await p.isVisible('#selRot')), '폰 상태 시트: 고른 가구 칸 버튼 없음');
   await p.screenshot({ path:(process.env.WORK || '/home/claude/work') + '/p38_phone.png' });

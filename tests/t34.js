@@ -9,7 +9,7 @@ const APP = 'file://' + (process.env.APP || (process.env.WORK || '/home/claude/w
   await p.goto(APP); await p.waitForTimeout(800);
   await p.fill('#isW', '2000'); await p.fill('#isD', '1500'); await p.click('#isGo'); await p.waitForTimeout(1300); await p.locator('#plan .rg').last().click(); await p.waitForTimeout(1300);
   if (await p.$('#guide.open')) { await p.keyboard.press('Escape'); await p.waitForTimeout(300); }
-  const add = async nm => { await p.click('#addBtn'); await p.waitForTimeout(300); await p.click(`#afPre button:has-text("${nm}")`); await p.click('#afAdd'); await p.waitForTimeout(500); return p.textContent('#toast'); };
+  const add = async nm => { await p.click('#addBtn'); await p.waitForTimeout(300); await p.click(`#afPre button:has-text("${nm}")`); await p.waitForTimeout(500); return p.textContent('#toast'); };
   const inside = () => p.evaluate(() => { const r = document.querySelector('#plan rect'); const W = +r.getAttribute('width'), H = +r.getAttribute('height');
     return [...document.querySelectorAll('#plan g.fg rect.body')].every(q => +q.getAttribute('x') >= 0 && +q.getAttribute('y') >= 0 && +q.getAttribute('x') + +q.getAttribute('width') <= W + 1 && +q.getAttribute('y') + +q.getAttribute('height') <= H + 1); });
   console.log('[①] 2000×1500 방');

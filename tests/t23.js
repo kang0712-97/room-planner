@@ -76,7 +76,7 @@ const SIZES = [ [390, 844], [390, 640], [360, 560] ];
     const sheet = async name => { await p.click(`#tabbar [data-tab="${name}"]`);
                                   await p.waitForTimeout(400); };
     await check('놓기(가구 추가)',
-      async () => { await sheet('add'); await p.click('#apModal [data-ap="furn"]'); }, () => p.click('#afCancel'));   // p37 부터 «추가» 탭은 먼저 가구·문·창문을 고른다
+      async () => { await sheet('add'); await p.click('#apModal [data-ap="furn"]'); await p.waitForTimeout(300); await p.click('#afOwn'); }, () => p.click('#afCancel'));   // p65 — «추가» 는 «직접 입력» 을 펼쳐야 보인다   // p37 부터 «추가» 탭은 먼저 가구·문·창문을 고른다
     await check('문 · 창문',
       async () => { await sheet('list');
                     await p.click('#openList .opitem [data-act="edit"]'); },

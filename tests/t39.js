@@ -24,7 +24,7 @@ const APP = 'file://' + (process.env.APP || (process.env.WORK || '/home/claude/w
   await p.fill('#rmW', '3000').catch(() => {}); await p.fill('#rmD', '3000').catch(() => {});
   await p.click('#rmSave').catch(() => {}); await p.waitForTimeout(700);
   const rooms = await p.$$('#roomList .roomcard .nm'); await rooms[rooms.length - 1].click(); await p.waitForTimeout(600);
-  await p.click('#addBtn'); await p.waitForTimeout(200); await p.click('#afPre button:has-text("싱글 침대")'); await p.click('#afAdd'); await p.waitForTimeout(700);
+  await p.click('#addBtn'); await p.waitForTimeout(200); await p.click('#afPre button:has-text("싱글 침대")'); await p.waitForTimeout(700);
   chk(!!(await p.$('#estChip')), '추정이 있는 새 방 → «추정 포함» 칩');
   await p.click('#estChip'); await p.waitForTimeout(300);
   const t = await p.textContent('#toast');

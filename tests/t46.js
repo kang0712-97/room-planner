@@ -23,7 +23,7 @@ const FILE = process.env.APP || WORK + '/app.html', DIR = path.dirname(FILE);
       const info = document.getElementById('sbInfo').getBoundingClientRect();
       return { labels: acts.map(n => n.textContent.trim()), small: acts.filter(n => { const r = n.getBoundingClientRect(); return r.width < 44 || r.height < 44; }).length,
         over: s.scrollWidth > s.clientWidth + 1, right: Math.max(...acts.map(n => n.getBoundingClientRect().right)) <= innerWidth, info: Math.round(info.width), nm: document.getElementById('sbNm').textContent }; });
-    chk(bar.labels.join('·') === '수정·복제·보관·삭제' && bar.small === 0 && !bar.over && bar.right,
+    chk(bar.labels.join('·') === '회전·수정·복제·보관·삭제' && bar.small === 0 && !bar.over && bar.right,
         `${W}px: 고른 가구 줄 [${bar.labels.join(' · ')}] 44px 이상 · 화면 안 · 이름 칸 ${bar.info}px («${bar.nm}»)`);
     if (W === 360) { chk(bar.info >= 60, `360px 에서도 이름 칸 60px 이상 (${bar.info}px)`); await c.close(); continue; }
     await p.screenshot({ path: WORK + '/p46_selbar.png' });
@@ -65,7 +65,7 @@ const FILE = process.env.APP || WORK + '/app.html', DIR = path.dirname(FILE);
   const got = await run('/gc.html?gctest', async p => {
     await p.click('#isPeek'); await p.waitForTimeout(1300);
     if (await p.$('#guide.open')) { await p.waitForTimeout(100); chk(await p.$eval('.gnote', n => n.textContent.includes('쿠키를 쓰지 않고')), '사용법 창에 측정 안내 한 줄'); await p.keyboard.press('Escape'); }
-    await p.click('#addBtn'); await p.waitForTimeout(300);
+    await p.click('#addBtn'); await p.waitForTimeout(300); await p.click('#afOwn');   // p65
     await p.fill('#afName', '비밀 책상'); await p.fill('#afW', '1000'); await p.fill('#afD', '600'); await p.fill('#afH', '720');
     await p.click('#afAdd'); await p.waitForTimeout(300);
     await p.click('#shareBtn'); await p.waitForTimeout(500); await p.click('#shClose').catch(() => {});

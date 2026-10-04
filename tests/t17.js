@@ -34,11 +34,9 @@ const chromium = require('playwright')[process.env.BROWSER || 'chromium'];   // 
   const grps = await p.$$eval('.pregrp', ns => ns.map(n => n.textContent));
   console.log('\n프리셋 묶음 :', grps.join(' / '), '· 개수', chips.length);
   console.log('보기 :', chips.slice(0, 4).join(' | '));
-  await p.click('.prechip:has-text("퀸 침대")'); await p.waitForTimeout(150);
-  console.log('퀸 침대 채움 :', await p.$eval('#afName', n => n.value),
-    await p.$eval('#afW', n => n.value), await p.$eval('#afD', n => n.value),
-    await p.$eval('#afH', n => n.value), '· 앞여유', await p.$eval('#afF', n => n.value));
-  await p.click('#afAdd'); await p.waitForTimeout(400);
+  console.log('이름 칸 접힘 :', !(await p.isVisible('#afName')), '· 추가 단추 숨김', !(await p.isVisible('#afAdd')), '· 직접 입력', await p.isVisible('#afOwn'));   // p65
+  await p.click('.prechip:has-text("퀸 침대")'); await p.waitForTimeout(400);
+  console.log('퀸 침대 누름 → 창 닫힘 :', !(await p.$('#addModal.open')));
   console.log('추가 후 토스트 :', await T('#toast'));
   console.log('보관함 :', (await p.$$eval('#drawerList .fitem .nm, #drawerList *[class*=nm]', ns => ns.map(n => n.textContent))).join(','));
 

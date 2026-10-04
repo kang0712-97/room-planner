@@ -154,7 +154,7 @@ const FILE = process.env.APP || WORK + '/app.html', APP = 'file://' + FILE;
 
   /* 가구 우선 보호: 위쪽 벽에 붙은 침대 — 놓는 중엔 그 자리에 콘센트, 아닐 땐 같은 자리가 침대를 고른다 */
   await tap(p, '#tabbar [data-tab="add"]'); await tap(p, '#apModal [data-ap="furn"]');
-  await p.click('#afPre button:has-text("싱글 침대")'); await p.tap('#afAdd'); await p.waitForTimeout(500);
+  await p.click('#afPre button:has-text("싱글 침대")'); await p.waitForTimeout(500);
   const bedAt = await p.evaluate(() => { const s = JSON.parse(localStorage.getItem('room-planner/3')); return s.items[s.items.length - 1]; });
   chk(bedAt.x === 0 && bedAt.y === 0, '침대가 왼쪽 위 모서리');
   await place(p, 'out', g.X(300), g.Y(0) + 12);

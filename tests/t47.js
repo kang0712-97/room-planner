@@ -53,7 +53,7 @@ const FILE = process.env.APP || WORK + '/app.html', APP = 'file://' + FILE;
   await p.tap(`#plan .fg[data-uid="${uid}"] rect.body`, { position: { x: bb.width / 2, y: bb.height / 2 }, force: true }); await p.waitForTimeout(400);
   const bar = await p.evaluate(() => ({ acts: [...document.querySelectorAll('#selbar .sb-act')].filter(n => !n.hidden && getComputedStyle(n).display !== 'none').map(n => n.textContent.trim()),
     sz: getComputedStyle(document.getElementById('sbSz')).display, nm: document.getElementById('sbNm').textContent }));
-  chk(bar.acts.join('·') === '수정·복제·보관·삭제' && bar.sz === 'none', `고른 가구 줄: «${bar.nm}» + [${bar.acts.join(' · ')}] — 치수 줄·자리 찾기 없음`);
+  chk(bar.acts.join('·') === '회전·수정·복제·보관·삭제' && bar.sz === 'none', `고른 가구 줄: «${bar.nm}» + [${bar.acts.join(' · ')}] — 치수 줄·자리 찾기 없음`);
   await p.screenshot({ path: WORK + '/p47_phone.png' });
   const fb = await p.evaluate(() => { const f = document.getElementById('tapeFab'), r = f.getBoundingClientRect(), bar = document.getElementById('plan').getBoundingClientRect();
     return { vis: !f.hidden && getComputedStyle(f).display !== 'none', x: Math.round(r.left), y: Math.round(r.top), w: Math.round(r.width), barB: Math.round(Math.max(0, bar.top)),
