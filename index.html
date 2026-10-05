@@ -454,6 +454,10 @@ details.fold[open]>summary{border-bottom:1px solid var(--line)}
 @media(prefers-reduced-motion:reduce){.mt-pull{transition:none}#roomModal.open .sheetbox{animation:none}}
 .sheetbox .acts .btn{height:36px;justify-content:center}
 .sheetbox .seg button{height:32px}
+.rmnotch{display:flex;flex-direction:column;gap:11px}     /* p68 — ㄱ자 방 칸 */
+.rmnotch[hidden]{display:none}
+.sheetbox .cornerseg button{height:44px}
+.cornerseg svg{width:24px;height:24px;fill:currentColor;fill-opacity:.22;stroke:currentColor;stroke-width:1.6;stroke-linejoin:miter}
 .sheetbox .hint{margin:6px 0 0}
 
 /* 방 안 가구와 보관한 가구를 «한 목록» 에 잇는다. 따로 둔 보관함은 폰에서 사실상 안 보였다. */
@@ -762,11 +766,11 @@ ol.todo li:first-child{color:var(--ink-2);font-weight:500}
 .crumb span{color:var(--line-strong)}
 
 .rg{cursor:pointer}
-.rg rect.rbody{fill:var(--surface);stroke:var(--line-strong);stroke-width:22}
-.rg:hover rect.rbody{stroke:var(--accent)}
-.rg.sel rect.rbody{stroke:var(--accent);stroke-width:34}
+.rg .rbody{fill:var(--surface);stroke:var(--line-strong);stroke-width:22}
+.rg:hover .rbody{stroke:var(--accent)}
+.rg.sel .rbody{stroke:var(--accent);stroke-width:34}
 /* p58 — 막 만든 방이 한 번 빛남(1.2초). 굵기는 그릴 때 화면 14px 로 */
-.rg rect.rglow{fill:none;stroke:var(--accent);opacity:0;pointer-events:none;animation:rgGlow 1.2s ease-out both}
+.rg .rglow{fill:none;stroke:var(--accent);opacity:0;pointer-events:none;animation:rgGlow 1.2s ease-out both}
 @keyframes rgGlow{0%{opacity:.5}100%{opacity:0}}
 .rg text{fill:var(--ink-2);pointer-events:none;-webkit-user-select:none;user-select:none}
 .rg:hover text{fill:var(--accent-ink)}
@@ -775,10 +779,10 @@ ol.todo li:first-child{color:var(--ink-2);font-weight:500}
 .rg .lastchip text,.rg:hover .lastchip text{fill:var(--surface);font-weight:600}
 /* p59 — 다시 온 사람: 방이 차례로 그려짐. 아랫변 → 양쪽 벽이 올라가 닫힘 → 바닥·글자·칩 */
 .rg .hw{fill:none;stroke:var(--line-strong);stroke-width:22;stroke-linecap:square;stroke-dasharray:1;pointer-events:none}
-.rg.drawing rect.rbody{stroke:none}
+.rg.drawing .rbody{stroke:none}
 .rg.drawing .hw-b{animation:hDraw .18s linear both;animation-delay:var(--d)}
 .rg.drawing .hw-s{animation:hDraw .32s cubic-bezier(.5,0,.3,1) both;animation-delay:calc(var(--d) + .16s)}
-.rg.drawing rect.rbody,.rg.drawing text{animation:hFade .25s ease-out both;animation-delay:calc(var(--d) + .4s)}
+.rg.drawing .rbody,.rg.drawing text{animation:hFade .25s ease-out both;animation-delay:calc(var(--d) + .4s)}
 .rg.drawing .lastchip{animation:hFade .25s ease-out both;animation-delay:calc(var(--d) + .55s)}
 @keyframes hDraw{from{stroke-dashoffset:1}to{stroke-dashoffset:0}}
 @keyframes hFade{from{opacity:0}}
@@ -1512,6 +1516,26 @@ ol.todo li:first-child{color:var(--ink-2);font-weight:500}
         <input id="rmD" type="number" min="500" max="30000" step="10" placeholder="세로">
         <input id="rmH" type="number" min="1500" max="5000" step="10" placeholder="천장 높이">
       </div></div>
+    <!-- p68 — ㄱ자 방: 직사각형에서 모서리 하나가 들어간 방 -->
+    <div><label>모양</label>
+      <div class="seg" id="rmShape">
+        <button type="button" data-shape="rect" aria-pressed="true">네모</button>
+        <button type="button" data-shape="l" aria-pressed="false">ㄱ자 — 한 모서리가 들어감</button>
+      </div></div>
+    <div class="rmnotch" id="rmNotch" hidden>
+      <div><label>들어간 모서리</label>
+        <div class="seg cornerseg" id="rmCorner">
+          <button type="button" data-corner="tl" aria-pressed="false" aria-label="왼쪽 위"><svg viewBox="0 0 24 24"><path d="M11 4H20V20H4V11H11Z"/></svg></button>
+          <button type="button" data-corner="tr" aria-pressed="true" aria-label="오른쪽 위"><svg viewBox="0 0 24 24"><path d="M4 4H13V11H20V20H4Z"/></svg></button>
+          <button type="button" data-corner="bl" aria-pressed="false" aria-label="왼쪽 아래"><svg viewBox="0 0 24 24"><path d="M4 4H20V20H11V13H4Z"/></svg></button>
+          <button type="button" data-corner="br" aria-pressed="false" aria-label="오른쪽 아래"><svg viewBox="0 0 24 24"><path d="M4 4H20V13H13V20H4Z"/></svg></button>
+        </div></div>
+      <div><label>들어간 크기 mm — 가로 / 세로</label>
+        <div class="row2">
+          <input id="rmNW" type="number" min="300" max="29700" step="10" placeholder="가로">
+          <input id="rmND" type="number" min="300" max="29700" step="10" placeholder="세로">
+        </div></div>
+    </div>
     <p class="hint" id="rmHint">벽 안쪽 기준으로 재서 넣으세요. 나중에 바꿀 수 있습니다.</p>
     <div class="acts">
       <button class="btn go" id="rmSave">저장</button>
@@ -1838,7 +1862,7 @@ const ROOM_PRESETS = [
 ];
 
 /* 화면에 찍히는 판 번호. 실기에서 «고쳤는데 그대로다» 를 가르는 유일한 단서다. */
-const BUILD = "2026-10-04 · p67";
+const BUILD = "2026-10-05 · p68";
 
 const KEYOPT = "room-planner/opt";
 let opt = { score:true, walk:true, unit:"mm", guide:0 };
@@ -1946,19 +1970,87 @@ const newRid = () => { let n = 1; while (ROOMOF("R"+n)) n++; return "R"+n; };
 /* 문·창문은 v3 까지 방마다 하나씩(door/window)이었다. 이제 배열이다.
    예전 저장본의 단수 필드를 배열 한 칸으로 옮긴다. */
 const WALL_OK = w => ["top","bottom","left","right"].includes(w) ? w : "top";
+/* p68 — ㄱ자 방: 직사각형(w×d)에서 모서리 하나를 따낸다. notch = { corner:"tl"|"tr"|"bl"|"br", w, d }.
+   남은 방이 너무 좁아지지 않게 따낸 크기는 300 ~ (변 − 300). 방이 900 보다 좁으면 따내지 않는다. */
+const CORNERS = ["tl", "tr", "bl", "br"];
+function adoptNotch(n, w, d){
+  if (!n || !CORNERS.includes(n.corner) || w < 900 || d < 900) return null;
+  return { corner:n.corner, w:clampInt(n.w, 300, w - 300), d:clampInt(n.d, 300, d - 300) };
+}
+/* 따낸 곳 사각형(방 좌표) — 없으면 null */
+function notchRect(r){
+  const n = r && r.notch; if (!n) return null;
+  const L = n.corner[1] === "l", T = n.corner[0] === "t";
+  return { x0:L ? 0 : r.w - n.w, x1:L ? n.w : r.w, y0:T ? 0 : r.d - n.d, y1:T ? n.d : r.d };
+}
+/* 벽에서 문·창·콘센트를 둘 수 있는 구간 [lo, hi] — 따낸 모서리 쪽 토막은 뺀다(초판은 네 바깥벽에만) */
+function wallSpan(wall, w, d, n){
+  const horiz = wall === "top" || wall === "bottom", len = horiz ? w : d;
+  if (!n) return { lo:0, hi:len };
+  const side = wall === "top" ? "t" : wall === "bottom" ? "b" : wall === "left" ? "l" : "r";
+  if ((horiz ? n.corner[0] : n.corner[1]) !== side) return { lo:0, hi:len };
+  const cut = horiz ? n.w : n.d, atStart = horiz ? n.corner[1] === "l" : n.corner[0] === "t";
+  return atStart ? { lo:cut, hi:len } : { lo:0, hi:len - cut };
+}
+/* 방 바깥선 — 도면·집 화면·비교 그림이 같이 쓴다 */
+function roomPath(r, ox = 0, oy = 0){
+  const q = notchRect(r), W = r.w, D = r.d;
+  const pts = !q ? [[0,0],[W,0],[W,D],[0,D]]
+    : r.notch.corner === "tl" ? [[q.x1,0],[W,0],[W,D],[0,D],[0,q.y1],[q.x1,q.y1]]
+    : r.notch.corner === "tr" ? [[0,0],[q.x0,0],[q.x0,q.y1],[W,q.y1],[W,D],[0,D]]
+    : r.notch.corner === "br" ? [[0,0],[W,0],[W,q.y0],[q.x0,q.y0],[q.x0,D],[0,D]]
+    :                           [[0,0],[W,0],[W,D],[q.x1,D],[q.x1,q.y0],[0,q.y0]];
+  return "M" + pts.map(p => (p[0] + ox) + " " + (p[1] + oy)).join("L") + "Z";
+}
+const roomArea = r => r.w * r.d - (r.notch ? r.notch.w * r.notch.d : 0);
+/* 글자를 놓을 큰 쪽 사각형 — ㄱ자의 두 팔 중 넓은 것 */
+function roomMain(r){
+  const q = notchRect(r); if (!q) return { x0:0, y0:0, x1:r.w, y1:r.d };
+  const T = r.notch.corner[0] === "t", L = r.notch.corner[1] === "l";
+  const a = T ? { x0:0, x1:r.w, y0:q.y1, y1:r.d } : { x0:0, x1:r.w, y0:0, y1:q.y0 };
+  const b = L ? { x0:q.x1, x1:r.w, y0:0, y1:r.d } : { x0:0, x1:q.x0, y0:0, y1:r.d };
+  const ar = o => (o.x1 - o.x0) * (o.y1 - o.y0);
+  return ar(a) >= ar(b) ? a : b;
+}
+/* 가구가 따낸 곳에 걸리면 가장 적게 움직여 밖으로(빈 쪽으로) 민다 */
+function pushOutNotch(r, it){
+  const q = notchRect(r); if (!q) return;
+  const f = foot(it);
+  if (!(it.x < q.x1 && it.x + f.w > q.x0 && it.y < q.y1 && it.y + f.d > q.y0)) return;
+  const L = r.notch.corner[1] === "l", T = r.notch.corner[0] === "t";
+  const mx = L ? q.x1 : q.x0 - f.w, my = T ? q.y1 : q.y0 - f.d;
+  const okx = mx >= 0 && mx <= r.w - f.w, oky = my >= 0 && my <= r.d - f.d;
+  if (okx && (!oky || Math.abs(mx - it.x) <= Math.abs(my - it.y))) it.x = mx;
+  else if (oky) it.y = my;
+}
+/* 가구에서 네 벽까지(따낸 곳의 안쪽 벽이 가로막으면 거기까지) */
+function wallDists(r, it, f){
+  const v = { l:it.x, r:r.w - it.x - f.w, t:it.y, b:r.d - it.y - f.d };
+  const q = notchRect(r); if (!q) return v;
+  const x1 = it.x + f.w, y1 = it.y + f.d;
+  if (it.y < q.y1 && y1 > q.y0){
+    if (q.x0 === 0 && q.x1 <= it.x) v.l = it.x - q.x1;
+    if (q.x1 === r.w && q.x0 >= x1) v.r = q.x0 - x1;
+  }
+  if (it.x < q.x1 && x1 > q.x0){
+    if (q.y0 === 0 && q.y1 <= it.y) v.t = it.y - q.y1;
+    if (q.y1 === r.d && q.y0 >= y1) v.b = q.y0 - y1;
+  }
+  return v;
+}
 function adoptDoors(r, w, d){
   const src = Array.isArray(r.doors) ? r.doors : (r.door ? [r.door] : []);
   const out = [];
   for (const D of src){
     if (!D) continue;
     const wall = WALL_OK(D.wall);
-    const span = (wall === "top" || wall === "bottom") ? w : d;
+    const S = wallSpan(wall, w, d, r.notch), span = S.hi - S.lo;      /* p68 — 따낸 토막 빼고 */
     const dw = clampInt(D.w, 300, span);
     /* 예전 형식: hingeX 가 개구부의 오른쪽 끝이면 hinge="end" */
     const hinge = D.hinge ? (D.hinge === "start" ? "start" : "end")
                 : (D.hingeX !== undefined && Math.abs(D.hingeX - ((D.x0|0) + dw)) < 2) ? "end" : "start";
     out.push({ id:D.id || ("D" + (out.length + 1)), wall,
-      x0: clampInt(D.x0, 0, Math.max(0, span - dw)), w:dw,
+      x0: clampInt(D.x0, S.lo, Math.max(S.lo, S.hi - dw)), w:dw,
       hinge, swing: D.swing === "out" ? "out" : "in" });
   }
   return out;
@@ -1969,11 +2061,11 @@ function adoptWindows(r, w, d, ceil){
   for (const W of src){
     if (!W) continue;
     const wall = WALL_OK(W.wall === undefined ? "bottom" : W.wall);
-    const span = (wall === "top" || wall === "bottom") ? w : d;
+    const S = wallSpan(wall, w, d, r.notch), span = S.hi - S.lo;
     const ww = clampInt(W.w, 200, span);
     const sill = clampInt(W.sill, 0, Math.max(0, ceil - 100));
     out.push({ id:W.id || ("W" + (out.length + 1)), wall,
-      x0: clampInt(W.x0, 0, Math.max(0, span - ww)), w:ww,
+      x0: clampInt(W.x0, S.lo, Math.max(S.lo, S.hi - ww)), w:ww,
       sill, head: clampInt(W.head === undefined ? ceil : W.head, sill + 100, ceil) });
   }
   return out;
@@ -1985,10 +2077,10 @@ function adoptOutlets(r, w, d){
   for (const O of src){
     if (!O) continue;
     const wall = WALL_OK(O.wall);
-    const span = (wall === "top" || wall === "bottom") ? w : d;
+    const S = wallSpan(wall, w, d, r.notch), span = S.hi - S.lo;
     const ow = clampInt(O.w, 60, span);
     out.push({ id:O.id || ("O" + (out.length + 1)), wall,
-      x0: clampInt(O.x0, 0, Math.max(0, span - ow)), w:ow });
+      x0: clampInt(O.x0, S.lo, Math.max(S.lo, S.hi - ow)), w:ow });
   }
   return out;
 }
@@ -2017,13 +2109,14 @@ function adopt(o){
       if (!r || !r.id) continue;
       const w = clampInt(r.w,500,30000), d = clampInt(r.d,500,30000);
       const ceil = clampInt(r.ceiling,1500,5000);
+      const notch = adoptNotch(r.notch, w, d), rn = Object.assign({}, r, { notch });   /* p68 */
       st.rooms.push({
         id:String(r.id), name:(r.name || "방").slice(0,24),
-        w, d, ceiling:ceil,
+        w, d, ceiling:ceil, notch,
         x:clampInt(r.x,-200000,200000), y:clampInt(r.y,-200000,200000),
-        doors:   adoptDoors(r, w, d),
-        windows: adoptWindows(r, w, d, ceil),
-        outlets: adoptOutlets(r, w, d),
+        doors:   adoptDoors(rn, w, d),
+        windows: adoptWindows(rn, w, d, ceil),
+        outlets: adoptOutlets(rn, w, d),
         conf: r.conf || null, todo: Array.isArray(r.todo) ? r.todo : null,
         sample: !!r.sample,
         layouts: Array.isArray(r.layouts) ? r.layouts.filter(l => l && Array.isArray(l.items)) : []
@@ -2099,9 +2192,14 @@ function clashes(){
         out.push({ a:arr[i].uid, b:arr[j].uid, x0, y0, w:x1-x0, h:y1-y0 });
     }
   /* p34 — 방 크기를 줄여 가구가 벽 밖으로 나간 경우도 «겹침» 으로 센다(벽과 겹친 것). 나간 부분을 빨갛게. */
-  const r = R();
+  const r = R(), nq = notchRect(r);
   if (r) for (const it of arr){
     const A = rectOf(it);
+    /* p68 — ㄱ자 방의 따낸 곳에 걸쳐도 벽과 겹친 것 */
+    if (nq && !(A.x1 > r.w + 1 || A.y1 > r.d + 1 || A.x0 < -1 || A.y0 < -1)){
+      const x0 = Math.max(A.x0, nq.x0), x1 = Math.min(A.x1, nq.x1), y0 = Math.max(A.y0, nq.y0), y1 = Math.min(A.y1, nq.y1);
+      if (x1 - x0 > 1 && y1 - y0 > 1) out.push({ a:it.uid, b:it.uid, wall:true, x0, y0, w:x1 - x0, h:y1 - y0 });
+    }
     if (A.x1 > r.w + 1 || A.y1 > r.d + 1 || A.x0 < -1 || A.y0 < -1){
       const x0 = A.x1 > r.w ? Math.max(A.x0, r.w) : A.x0, y0 = A.y1 > r.d ? Math.max(A.y0, r.d) : A.y0;
       const x1 = A.x1 > r.w ? A.x1 : A.x1, y1 = A.y1;
@@ -2115,12 +2213,13 @@ function clashes(){
    개구부의 x0 는 그 벽의 시작점에서 잰 거리다. 네 벽을 같은 방식으로 다룬다. */
 const WALL_KO = { top:"위쪽", bottom:"아래쪽", left:"왼쪽", right:"오른쪽" };
 function wallAxis(r, wall){
-  switch (wall){
-    case "bottom": return { ox:0,   oy:r.d, dx: 1, dy: 0, nx: 0, ny:-1, len:r.w };
-    case "left":   return { ox:0,   oy:0,   dx: 0, dy: 1, nx: 1, ny: 0, len:r.d };
-    case "right":  return { ox:r.w, oy:0,   dx: 0, dy: 1, nx:-1, ny: 0, len:r.d };
-    default:       return { ox:0,   oy:0,   dx: 1, dy: 0, nx: 0, ny: 1, len:r.w };
-  }
+  const A = wall === "bottom" ? { ox:0,   oy:r.d, dx: 1, dy: 0, nx: 0, ny:-1, len:r.w }
+          : wall === "left"   ? { ox:0,   oy:0,   dx: 0, dy: 1, nx: 1, ny: 0, len:r.d }
+          : wall === "right"  ? { ox:r.w, oy:0,   dx: 0, dy: 1, nx:-1, ny: 0, len:r.d }
+          :                     { ox:0,   oy:0,   dx: 1, dy: 0, nx: 0, ny: 1, len:r.w };
+  const S = wallSpan(wall, r.w, r.d, r.notch);      /* p68 — 문·창·콘센트를 둘 수 있는 구간 */
+  A.lo = S.lo; A.hi = S.hi;
+  return A;
 }
 const wallPt = (A, t) => ({ x:A.ox + A.dx * t, y:A.oy + A.dy * t });
 
@@ -2441,15 +2540,19 @@ function drawHome(){
         g.appendChild(el("path", { class:c, d, pathLength:1 }));
     }
     if (landRoom === r.id) g.setAttribute("visibility", "hidden");
-    g.appendChild(el("rect", { class:"rbody", x:r.x, y:r.y, width:r.w, height:r.d, rx:24 }));
+    /* p68 — ㄱ자 방이면 바깥선을 그대로(네모 방은 예전처럼 둥근 네모) */
+    g.appendChild(r.notch ? el("path", { class:"rbody", d:roomPath(r, r.x, r.y) })
+                          : el("rect", { class:"rbody", x:r.x, y:r.y, width:r.w, height:r.d, rx:24 }));
     if (glowRoom && glowRoom.id === r.id){
       const left = glowRoom.until - performance.now();
-      if (left > 0) g.appendChild(el("rect", { class:"rglow", x:r.x, y:r.y, width:r.w, height:r.d, rx:24,
+      if (left > 0) g.appendChild(el(r.notch ? "path" : "rect", r.notch ? { class:"rglow", d:roomPath(r, r.x, r.y),
+        "stroke-width":pxMm(14), style:`animation-delay:${Math.round(left - 1200)}ms` } : { class:"rglow", x:r.x, y:r.y, width:r.w, height:r.d, rx:24,
         "stroke-width":pxMm(14), style:`animation-delay:${Math.round(left - 1200)}ms` }));
       else glowRoom = null;
     }
-    const fs = Math.max(150, Math.min(420, Math.min(r.w, r.d) * 0.14));
-    const cx = r.x + r.w/2, cy = r.y + r.d/2;
+    const mr = roomMain(r);                         /* p68 — 글자는 ㄱ자의 넓은 팔 가운데 */
+    const fs = Math.max(150, Math.min(420, Math.min(mr.x1 - mr.x0, mr.y1 - mr.y0) * 0.14));
+    const cx = r.x + (mr.x0 + mr.x1)/2, cy = r.y + (mr.y0 + mr.y1)/2;
     g.appendChild(txt({ x:cx, y:cy - fs*0.15, "text-anchor":"middle",
       "font-size":fs, "font-weight":600 }, r.name));
     g.appendChild(txt({ x:cx, y:cy + fs*0.85, "text-anchor":"middle", "font-size":fs*0.6,
@@ -2495,11 +2598,22 @@ function drawRoom(){
   const r = R(); if (!r) return;
   pendingLabels = [];
 
-  svg.appendChild(el("rect", { x:0, y:0, width:r.w, height:r.d, fill:"var(--surface)" }));
+  svg.appendChild(r.notch ? el("path", { class:"roomfloor", d:roomPath(r), fill:"var(--surface)" })
+                          : el("rect", { class:"roomfloor", x:0, y:0, width:r.w, height:r.d, fill:"var(--surface)" }));
   const grid = el("g", { stroke:"var(--line)", "stroke-width":4, opacity:.85 });
   for (let x = 500; x < r.w; x += 500) grid.appendChild(el("line", { x1:x, y1:0, x2:x, y2:r.d }));
   for (let y = 500; y < r.d; y += 500) grid.appendChild(el("line", { x1:0, y1:y, x2:r.w, y2:y }));
   svg.appendChild(grid);
+  /* p68 — ㄱ자 방: 따낸 곳은 방 밖(바탕색)으로 덮고, 따낸 크기를 옅게 */
+  const nq = notchRect(r);
+  if (nq){
+    svg.appendChild(el("rect", { class:"notch", x:nq.x0 - 2, y:nq.y0 - 2, width:nq.x1 - nq.x0 + 4, height:nq.y1 - nq.y0 + 4,
+      fill:"var(--sunk)", "pointer-events":"none" }));
+    const nfs = Math.max(70, Math.min(110, (nq.x1 - nq.x0) * 0.12));
+    svg.appendChild(txt({ class:"notchlbl", x:(nq.x0 + nq.x1) / 2, y:(nq.y0 + nq.y1) / 2 + nfs * 0.35, "text-anchor":"middle",
+      "font-family":"IBM Plex Mono,monospace", "font-size":nfs, fill:"var(--muted)", "pointer-events":"none" },
+      `${r.notch.w} × ${r.notch.d}`));
+  }
 
   if (showWalk) drawWalkway();
 
@@ -2534,15 +2648,20 @@ function drawRoom(){
 
   asDyn(() => drawClashes(cl));      /* p40 — 겹침 표시. 끄는 동안 dragPatch 가 이것만 다시 그린다 */
 
-  svg.appendChild(el("rect", { x:0, y:0, width:r.w, height:r.d, fill:"none",
-    stroke:"var(--ink)", "stroke-width":26 }));
+  svg.appendChild(r.notch ? el("path", { class:"roomwall", d:roomPath(r), fill:"none", stroke:"var(--ink)", "stroke-width":26, "stroke-linejoin":"miter" })
+                          : el("rect", { class:"roomwall", x:0, y:0, width:r.w, height:r.d, fill:"none", stroke:"var(--ink)", "stroke-width":26 }));
 
   /* p53 — 콘센트를 놓는 중엔 벽을 따라 얇은 파란 띠(바깥 14px ~ 안쪽 22px)를 칠하고 벽선을 따라 점선이 흐른다.
      누르면 인정되는 범위(placeOpening: 바깥 40px ~ 안쪽 60px)를 그대로 칠했더니 좁은 방은 거의 다 파래져 «벽» 이 안 보였다. 초록 벽 강조(p51)는 초록이 많은 도면에서 안 보였다(갤럭시). 문·창문은 미리보기 하나만 눈에 띄게 강조를 뺐다 */
   /* p55 — 띠·흐르는 점선은 «형광칠 같다», p54 의 옅은 점선은 «너무 옅다»(갤럭시) → 띠 없이 벽선만 진한 파랑 실선으로 덮는다 */
   if (placing === "out"){
-    svg.appendChild(el("rect", { class:"placewall", x:0, y:0, width:r.w, height:r.d, fill:"none",
-      stroke:"var(--preview)", "stroke-width":Math.max(26, pxMm(4)), "pointer-events":"none" }));
+    /* p68 — 놓을 수 있는 구간(네 바깥벽의 남은 토막)만 파랗게 */
+    const pw = el("g", { class:"placewall", stroke:"var(--preview)", "stroke-width":Math.max(26, pxMm(4)), "pointer-events":"none" });
+    for (const wall of ["top", "bottom", "left", "right"]){
+      const A = wallAxis(r, wall), p0 = wallPt(A, A.lo), p1 = wallPt(A, A.hi);
+      pw.appendChild(el("line", { x1:p0.x, y1:p0.y, x2:p1.x, y2:p1.y, "stroke-linecap":"square" }));
+    }
+    svg.appendChild(pw);
   }
   /* 벽선을 그린 뒤라야 개구부가 벽을 끊어 보인다 · p51 — 한 묶음(#opLayer)이라 끄는 동안 이것만 다시 그린다 */
   const opG = el("g", { id:"opLayer" }); svg.appendChild(opG); fillOpLayer(opG);
@@ -2616,6 +2735,7 @@ function drawGuides(){
      (실기 피드백: 벽까지 그으면 선이 다른 가구를 뚫고 지나가 읽기 어렵다) */
   const cx = it.x + f.w / 2, cy = it.y + f.d / 2;
   const others = inRoom().filter(o => o.uid !== it.uid).map(rectOf);
+  const nq = notchRect(r); if (nq) others.push(nq);           /* p68 — 따낸 곳의 안쪽 벽까지 */
   let L = 0, Rr = r.w, T = 0, B = r.d;
   for (const q of others){
     if (q.y0 < cy && cy < q.y1){
@@ -2662,8 +2782,10 @@ function place(it, nx, ny, free){
   const r = R(), f = foot(it);
   const others = inRoom().filter(q => q.uid !== it.uid)
     .map(q => { const g = foot(q); return { x:{lo:q.x,hi:q.x+g.w}, y:{lo:q.y,hi:q.y+g.d} }; });
+  const nq = notchRect(r); if (nq) others.push({ x:{lo:nq.x0,hi:nq.x1}, y:{lo:nq.y0,hi:nq.y1} });   /* p68 — 따낸 벽에도 붙는다 */
   it.x = clampInt(snapAxis(nx, f.w, r.w, others.map(o=>o.x), free), 0, r.w - f.w);
   it.y = clampInt(snapAxis(ny, f.d, r.d, others.map(o=>o.y), free), 0, r.d - f.d);
+  pushOutNotch(r, it);                                         /* p68 — 따낸 곳 안으로는 못 들어간다 */
 }
 function rotate(uid){
   const it = ITEM(uid);
@@ -2682,6 +2804,7 @@ function rotate(uid){
 }
 function freeSpot(f){
   const r = R(), others = inRoom().map(q => rectOf(q));
+  const nq = notchRect(r); if (nq) others.push(nq);           /* p68 */
   for (let y = 0; y <= r.d - f.d; y += 100)
     for (let x = 0; x <= r.w - f.w; x += 100){
       if (!others.some(o => x < o.x1 && x+f.w > o.x0 && y < o.y1 && y+f.d > o.y0))
@@ -2956,7 +3079,7 @@ function onMove(e){
     if (!O){ opDrag = null; return; }
     const A = wallAxis(r, O.wall), m = toMm(pt.x, pt.y);
     const t = (m.x - A.ox) * A.dx + (m.y - A.oy) * A.dy;
-    O.x0 = clampInt(Math.round((opDrag.x00 + t - opDrag.t0) / 10) * 10, 0, Math.max(0, A.len - O.w));
+    O.x0 = clampInt(Math.round((opDrag.x00 + t - opDrag.t0) / 10) * 10, A.lo, Math.max(A.lo, A.hi - O.w));   /* p68 */
     opDrag.moved = true;
     queueMove(opFrame);
     return;
@@ -3171,7 +3294,8 @@ function distRect(x, y, q){
 
 /* 여유거리 격자 */
 function clearField(rects){
-  const r = R();
+  const r = R(), nq = notchRect(r);
+  if (nq) rects = rects.concat([nq]);              /* p68 — 따낸 곳은 벽 덩어리 */
   const nx = Math.max(2, Math.round(r.w / GRID)), ny = Math.max(2, Math.round(r.d / GRID));
   const sx = r.w / nx, sy = r.d / ny;
   const c = new Float32Array(nx * ny);
@@ -3347,7 +3471,9 @@ function openZones(F, minR){
    둘 중 더 좁은 쪽이 답이다. */
 /* p34 — 한 점에서 «가장 가까운 장애물» 과 «반대쪽에서 가장 가까운 장애물». 둘 다 있으면 그 사이가 통로다. */
 function gapAt(x, y, rects){
-  const r = R(), obs = [
+  const r = R(), nq = notchRect(r);
+  if (nq) rects = rects.concat([nq]);              /* p68 */
+  const obs = [
     { d:x, cx:0, cy:y }, { d:r.w - x, cx:r.w, cy:y }, { d:y, cx:x, cy:0 }, { d:r.d - y, cx:x, cy:r.d } ];
   for (const q of rects){
     const cx = Math.min(Math.max(x, q.x0), q.x1), cy = Math.min(Math.max(y, q.y0), q.y1);
@@ -3532,8 +3658,10 @@ function inflatedRects(){
 function clearanceWarn(){
   const r = R(); if (!r) return [];
   const all = inRoom().map(it => ({ it, q:rectOf(it) }));
+  const nq = notchRect(r); if (nq) all.push({ it:null, q:nq });     /* p68 — 따낸 곳은 «벽» */
   const out = [];
   for (const { it, q } of all){
+    if (!it) continue;
     const need = spec(it).front | 0;
     if (!need || spec(it).fixed) continue;
     const dir = frontDir(it);
@@ -3547,7 +3675,7 @@ function clearanceWarn(){
                                 : { x0:q.x1, x1:q.x1 + need, y0:q.y0, y1:q.y1 };
     let blocker = "벽";
     for (const o of all){
-      if (o.it.uid === it.uid) continue;
+      if (o.it && o.it.uid === it.uid) continue;
       const ix = Math.min(zone.x1, o.q.x1) - Math.max(zone.x0, o.q.x0);
       const iy = Math.min(zone.y1, o.q.y1) - Math.max(zone.y0, o.q.y0);
       if (ix > 1 && iy > 1){
@@ -3555,7 +3683,7 @@ function clearanceWarn(){
                 : dir === "down" ? o.q.y0 - q.y1
                 : dir === "left" ? q.x0 - o.q.x1
                                  : o.q.x0 - q.x1;
-        if (Math.max(0, d) < free){ free = Math.max(0, d); blocker = spec(o.it).name; }
+        if (Math.max(0, d) < free){ free = Math.max(0, d); blocker = o.it ? spec(o.it).name : "벽"; }
       }
     }
     if (free < need - 1)
@@ -4093,6 +4221,7 @@ function ruleCtx(){
      다만 이웃 간격(gaps)에는 넣는다 — 침대 옆에 기둥이 있으면 그만큼 좁다. 통로·겹침은 walkNow·clashes 가 따로 본다. */
   const all = inRoom(), list = all.filter(it => !spec(it).fixed), rects = list.map(rectOf);
   const allR = rects.concat(all.filter(it => spec(it).fixed).map(rectOf));
+  const nq = notchRect(r); if (nq) allR.push(nq);              /* p68 — 따낸 곳은 이웃 간격에서 벽처럼 */
   const walk = walkNow();          /* 여유거리 격자는 여기서 이미 한 번 돌았다 — 또 돌리지 않는다 */
   return { r, list, rects, walk, allRects:allR,
            openR: walk.bare ? walk.bare.openR : 0,
@@ -4390,6 +4519,7 @@ function suggestSpots(uid){
 
   const keep   = { x:it.x, y:it.y, rot:it.rot };
   const others = inRoom().filter(q => q.uid !== uid).map(rectOf);
+  const nq0 = notchRect(r); if (nq0) others.push(nq0);       /* p68 — 따낸 곳엔 추천하지 않는다 */
   const sect   = (r.doors || []).map(D => doorSector(r, D)).filter(Boolean);
 
   const drop = { clash:0, door:0 };
@@ -4629,7 +4759,7 @@ function renderLists(){
     }
     $("cntRooms").textContent = `${state.rooms.length}개`;
     let area = 0;
-    for (const r of state.rooms) area += r.w * r.d;
+    for (const r of state.rooms) area += roomArea(r);
     $("hRooms").textContent = `${state.rooms.length}개`;
     $("hArea").textContent  = (area/1e6).toFixed(2) + " m²";
     $("hItems").textContent = `${state.items.filter(i => i.room !== null).length}개`;
@@ -4657,10 +4787,10 @@ function renderLists(){
   const r = R();
   $("rSize").textContent = `${r.w} × ${r.d}`;
   $("rCeil").textContent = `${r.ceiling} mm`;
-  $("rArea").textContent = (r.w*r.d/1e6).toFixed(2) + " m²";
+  $("rArea").textContent = (roomArea(r)/1e6).toFixed(2) + " m²";
   let a = 0; for (const it of inRoom()){ const s = spec(it); a += s.w * s.d; }
   $("occArea").textContent = (a/1e6).toFixed(2) + " m²";
-  $("occPct").textContent  = (a/(r.w*r.d)*100).toFixed(1) + " %";
+  $("occPct").textContent  = (a/roomArea(r)*100).toFixed(1) + " %";
 }
 
 /* ============ 배치 저장 ============
@@ -4686,7 +4816,7 @@ function saveLayout(){
       walk: h.bare, used: h.used,
       clash: h.cl.length, door: h.dh.length, clear: h.cw.length,
       occ: +(inRoom().reduce((a, it) => a + spec(it).w * spec(it).d, 0)
-             / (r.w * r.d) * 100).toFixed(1)
+             / roomArea(r) * 100).toFixed(1)
     }
   });
   commit(before);
@@ -4826,7 +4956,7 @@ function miniPlan(){
   g.setAttribute("viewBox", `${-pad} ${-pad} ${r.w + pad*2} ${r.d + pad*2}`);
   g.setAttribute("preserveAspectRatio", "xMidYMid meet");
   g.setAttribute("aria-hidden", "true");
-  g.appendChild(el("rect", { x:0, y:0, width:r.w, height:r.d, fill:"var(--sunk)" }));
+  g.appendChild(el("path", { d:roomPath(r), fill:"var(--sunk)" }));      /* p68 */
 
   for (const it of inRoom()){
     const sp = spec(it), f = foot(it);
@@ -4844,8 +4974,8 @@ function miniPlan(){
     g.appendChild(el("rect", { x:c.x0, y:c.y0, width:c.w, height:c.h,
       fill:"var(--bad)", "fill-opacity":".45" }));
 
-  g.appendChild(el("rect", { x:0, y:0, width:r.w, height:r.d,
-    fill:"none", stroke:"var(--ink)", "stroke-width":34 }));
+  g.appendChild(el("path", { d:roomPath(r),
+    fill:"none", stroke:"var(--ink)", "stroke-width":34, "stroke-linejoin":"miter" }));
 
   for (const D of (r.doors || [])){
     const A = wallAxis(r, D.wall), p0 = wallPt(A, D.x0), p1 = wallPt(A, D.x0 + D.w);
@@ -4891,7 +5021,7 @@ function cmpCase(id){
 }
 const occupancy = () => {
   const r = R(); if (!r) return 0;
-  return +(inRoom().reduce((a, it) => a + spec(it).w * spec(it).d, 0) / (r.w * r.d) * 100).toFixed(1);
+  return +(inRoom().reduce((a, it) => a + spec(it).w * spec(it).d, 0) / roomArea(r) * 100).toFixed(1);
 };
 
 function openCompare(){
@@ -5139,7 +5269,7 @@ function renderClashBox(){
       '<p class="selhint">아직 가구가 없어요. 가구를 놓으면 통로폭·겹침·배치 점수가 여기 나옵니다.</p>' +
       `<div class="read"><div class="read-h"><span>방</span><em>${escapeHtml(r.name)}</em></div><dl>` +
       `<dt>크기</dt><dd>${fmt(r.w)} × ${fmt(r.d)} ${u0}</dd>` +
-      `<dt>넓이</dt><dd>${(r.w * r.d / 1e6).toFixed(2)} m²</dd>` +
+      `<dt>넓이</dt><dd>${(roomArea(r) / 1e6).toFixed(2)} m²</dd>` +
       `<dt>문 · 창문</dt><dd>${(r.doors || []).length} · ${(r.windows || []).length}</dd></dl></div>`;
     /* p66 — 알약 대신 «다음 할 일» 단추 둘. 문이 있으면 ① 에 체크 */
     $("miniStat").hidden = true;
@@ -5242,16 +5372,16 @@ function renderSelBox(){
       `<div class="selacts">${editBtn}</div>`;
     return;
   }
-  const r = R(), f = foot(it);
+  const r = R(), f = foot(it), wd = wallDists(r, it, f);      /* p68 — 따낸 벽이 가로막으면 거기까지 */
   box.innerHTML =
     `<div class="read-h"><span>${escapeHtml(sp.name)}</span><em>${it.locked ? "잠김" : sp.fixed ? "고정물" : (CAT_KO[sp.cat] || "")}</em></div><dl>` +
     `<dt title="가로 × 깊이 × 높이">크기</dt><dd>${fmt(sp.w)} × ${fmt(sp.d)} × ${fmt(sp.h)}</dd>` +
     `<dt>회전</dt><dd>${it.rot}°</dd>` +
     `<dt>바닥 차지</dt><dd>${fmt(f.w)} × ${fmt(f.d)}</dd>` +
-    `<dt>왼쪽 벽</dt><dd data-wall="l">${fmt(it.x)} ${u}</dd>` +
-    `<dt>오른쪽 벽</dt><dd data-wall="r">${fmt(r.w-it.x-f.w)} ${u}</dd>` +
-    `<dt>위쪽 벽</dt><dd data-wall="t">${fmt(it.y)} ${u}</dd>` +
-    `<dt>아래쪽 벽</dt><dd data-wall="b">${fmt(r.d-it.y-f.d)} ${u}</dd></dl>` +
+    `<dt>왼쪽 벽</dt><dd data-wall="l">${fmt(wd.l)} ${u}</dd>` +
+    `<dt>오른쪽 벽</dt><dd data-wall="r">${fmt(wd.r)} ${u}</dd>` +
+    `<dt>위쪽 벽</dt><dd data-wall="t">${fmt(wd.t)} ${u}</dd>` +
+    `<dt>아래쪽 벽</dt><dd data-wall="b">${fmt(wd.b)} ${u}</dd></dl>` +
     /* 회전은 기호만으로는 읽히지 않는다 — 글자로 적어 둔다 */
     `<div class="selacts">` +
     `<button class="btn" type="button" id="selRot"${it.locked ? " disabled" : ""}>` +
@@ -5269,7 +5399,7 @@ function selBoxDists(){
   const it = sel ? ITEM(sel) : null, r = R();
   if (mode !== "room" || !it || !r || it.room === null) return;
   const f = foot(it), u = unitLabel();
-  const v = { l:it.x, r:r.w - it.x - f.w, t:it.y, b:r.d - it.y - f.d };
+  const v = wallDists(r, it, f);
   for (const dd of $("selBox").querySelectorAll("dd[data-wall]")){
     const s = `${fmt(v[dd.dataset.wall])} ${u}`;
     if (dd.textContent !== s) dd.textContent = s;
@@ -5424,6 +5554,10 @@ function askRoom(rid, rect){
   $("rmW").value = r ? r.w : (rect ? rect.w : "");
   $("rmD").value = r ? r.d : (rect ? rect.d : "");
   $("rmH").value = r ? r.ceiling : 2400;
+  /* p68 — 모양 */
+  rmCorner = r && r.notch ? r.notch.corner : "tr";
+  $("rmNW").value = r && r.notch ? r.notch.w : ""; $("rmND").value = r && r.notch ? r.notch.d : "";
+  setRmShape(!!(r && r.notch));
   $("rmHint").textContent = rect
     ? "도면에서 잰 크기입니다. 실측값이 있으면 고쳐 넣으세요."
     : "벽 안쪽 기준으로 재서 넣으세요. 나중에 바꿀 수 있습니다.";
@@ -5439,6 +5573,20 @@ function askRoom(rid, rect){
   }
   if (!isPhone()) setTimeout(() => $("rmName").focus(), 30);
 }
+/* p68 — 모양 고르기. ㄱ자를 처음 고르면 들어간 크기를 방의 1/3 로 채운다 */
+let rmCorner = "tr";
+function setRmShape(l){
+  opSetSeg("rmShape", "data-shape", l ? "l" : "rect");
+  opSetSeg("rmCorner", "data-corner", rmCorner);
+  $("rmNotch").hidden = !l;
+  if (l && !$("rmNW").value){
+    const w = Number($("rmW").value) || 3000, d = Number($("rmD").value) || 2700;
+    $("rmNW").value = Math.max(300, Math.round(w / 3 / 100) * 100);
+    $("rmND").value = Math.max(300, Math.round(d / 3 / 100) * 100);
+  }
+}
+$("rmShape").addEventListener("click", e => { const b = e.target.closest("button"); if (b) setRmShape(b.dataset.shape === "l"); });
+$("rmCorner").addEventListener("click", e => { const b = e.target.closest("button"); if (!b) return; rmCorner = b.dataset.corner; opSetSeg("rmCorner", "data-corner", rmCorner); });
 /* p60 — 줄자 길이: 6,000mm 에서 최대(246). 당기는 동안 숫자는 오른손 위치를 읽어 따라 올라간다 */
 let rmRaf = 0;
 const rmLen = w => Math.max(0, Math.min(246, w / 6000 * 246));
@@ -5470,14 +5618,24 @@ $("rmSave").addEventListener("click", () => {
   const w = Number($("rmW").value), d = Number($("rmD").value), h = Number($("rmH").value) || 2400;
   if (![w,d].every(v => Number.isFinite(v) && v >= 500 && v <= 30000))
     return toast("가로·세로를 500~30000 mm 로 넣어 주세요");
+  /* p68 — ㄱ자 방 */
+  let notch = null;
+  if (!$("rmNotch").hidden){
+    const nw = Number($("rmNW").value), nd = Number($("rmND").value);
+    if (w < 900 || d < 900) return toast("ㄱ자 방은 가로·세로가 900 mm 이상이어야 해요", 2600);
+    if (!(nw >= 300 && nw <= w - 300 && nd >= 300 && nd <= d - 300))
+      return toast(`들어간 크기는 가로 300~${Math.round(w) - 300}, 세로 300~${Math.round(d) - 300} mm 로 넣어 주세요`, 2800);
+    notch = adoptNotch({ corner:rmCorner, w:nw, d:nd }, Math.round(w), Math.round(d));
+  }
   const before = snapshot();
   if (roomEditId){
     const r = ROOMOF(roomEditId);
-    r.name = name; r.w = Math.round(w); r.d = Math.round(d); r.ceiling = clampInt(h,1500,5000);
+    r.name = name; r.w = Math.round(w); r.d = Math.round(d); r.ceiling = clampInt(h,1500,5000); r.notch = notch;
     for (const it of state.items.filter(i => i.room === r.id)){
       const f = foot(it);
       it.x = clampInt(it.x, 0, Math.max(0, r.w - f.w));
       it.y = clampInt(it.y, 0, Math.max(0, r.d - f.d));
+      pushOutNotch(r, it);                        /* p68 — 들어간 곳에 있던 가구는 밖으로 */
     }
     /* p48 — 문·창문도 새 벽 길이 안으로(벽 끝에 붙어 있던 문은 끝에 붙은 채, 벽보다 긴 창은 벽 길이로) */
     r.doors = adoptDoors(r, r.w, r.d);
@@ -5492,7 +5650,7 @@ $("rmSave").addEventListener("click", () => {
     if (!roomEditRect){
       for (const r of state.rooms) x = Math.max(x, r.x + r.w + 600);
     }
-    state.rooms.push({ id, name, w:Math.round(w), d:Math.round(d),
+    state.rooms.push({ id, name, w:Math.round(w), d:Math.round(d), notch,
                        ceiling:clampInt(h,1500,5000), x:Math.round(x), y:Math.round(y),
                        doors:[], windows:[], layouts:[],
                        conf:{ size:"추정", ceiling:"추정", door:"추정", window:"추정" },
@@ -5651,6 +5809,8 @@ function saveOpening(){
     return toast(`폭을 ${lo}~${span} mm 로 넣어 주세요`);
   if (!Number.isFinite(x0) || x0 < 0 || x0 + w > span)
     return toast(`시작 거리는 0~${span - w} mm 사이여야 합니다`);
+  { const A = wallAxis(r, opWall);                    /* p68 — ㄱ자 방: 따낸 모서리 쪽 토막에는 못 둔다 */
+    if (x0 < A.lo || x0 + w > A.hi) return toast(`들어간 모서리 쪽 벽이에요 — 시작 거리를 ${A.lo}~${A.hi - w} mm 로 넣어 주세요`, 2800); }
 
   const before = snapshot();
   if (opKind === "door"){
@@ -5872,10 +6032,10 @@ function startPlacing(kind){
 function ghostDefault(kind){
   const r = R();
   for (const wall of ["top", "left", "right", "bottom"]){
-    const A = wallAxis(r, wall), w = Math.min(OP_DEF[kind], A.len);
-    const x0 = Math.round((A.len - w) / 2 / 10) * 10;
+    const A = wallAxis(r, wall), w = Math.min(OP_DEF[kind], A.hi - A.lo);      /* p68 — 따낸 토막 빼고 */
+    const x0 = A.lo + Math.round((A.hi - A.lo - w) / 2 / 10) * 10;
     const busy = ["door", "win"].some(k => opList(r, k).some(o => o.wall === wall && x0 < o.x0 + o.w && o.x0 < x0 + w));
-    if (!busy || wall === "bottom") return ghostRec(kind, wall, busy ? 0 : x0, w);
+    if (!busy || wall === "bottom") return ghostRec(kind, wall, busy ? A.lo : x0, w);
   }
 }
 function ghostRec(kind, wall, x0, w){
@@ -5890,13 +6050,13 @@ function ghostTo(m){
   let best = null;
   for (const wall of ["top", "bottom", "left", "right"]){
     const A = wallAxis(r, wall);
-    const t = (m.x - A.ox) * A.dx + (m.y - A.oy) * A.dy, tc = Math.max(0, Math.min(A.len, t));
+    const t = (m.x - A.ox) * A.dx + (m.y - A.oy) * A.dy, tc = Math.max(A.lo, Math.min(A.hi, t));
     const qx = A.ox + A.dx * tc, qy = A.oy + A.dy * tc, d = Math.hypot(m.x - qx, m.y - qy);
     if (!best || d < best.d) best = { wall, A, t, d };
   }
-  const w = Math.min(ghost.wPref || ghost.w, best.A.len);
+  const w = Math.min(ghost.wPref || ghost.w, best.A.hi - best.A.lo);
   ghost.wall = best.wall; ghost.w = w;
-  ghost.x0 = clampInt(Math.round((best.t - w / 2) / 10) * 10, 0, Math.max(0, best.A.len - w));
+  ghost.x0 = clampInt(Math.round((best.t - w / 2) / 10) * 10, best.A.lo, Math.max(best.A.lo, best.A.hi - w));
 }
 function startGhostDrag(m, pt, e){
   ghostTo(m);                                              /* 누른 곳으로 먼저 옮긴다 — 탭만 해도 거기로 */
@@ -5923,8 +6083,8 @@ function opEndMove(m){
   const d = opDrag, r = R(), O = d.O, A = wallAxis(r, O.wall);
   /* 잡은 곳에서 움직인 만큼만 — 손잡이 판정이 끝에서 바깥으로 비켜 있어 절대 위치를 쓰면 잡는 순간 폭이 튀었다 */
   const dt = Math.round(((m.x - A.ox) * A.dx + (m.y - A.oy) * A.dy - d.t0) / 10) * 10, min = d.kind === "door" ? 300 : 200;
-  if (d.end === "a"){ O.x0 = clampInt(d.x0 + dt, 0, d.x1 - min); O.w = d.x1 - O.x0; }
-  else { O.w = clampInt(d.x1 - d.x0 + dt, min, A.len - d.x0); }
+  if (d.end === "a"){ O.x0 = clampInt(d.x0 + dt, A.lo, d.x1 - min); O.w = d.x1 - O.x0; }
+  else { O.w = clampInt(d.x1 - d.x0 + dt, min, A.hi - d.x0); }
   if (O.__g) O.wPref = O.w;                 /* 미리보기에서 손으로 맞춘 폭이 새 «원하는 폭» */
 }
 /* «놓기» — 미리보기를 진짜로. 되돌리기 한 번 */
@@ -5955,12 +6115,12 @@ function placeOpening(m){
     const A = wallAxis(r, wall);
     const t = (m.x - A.ox) * A.dx + (m.y - A.oy) * A.dy;          /* 벽을 따라 */
     const dn = (m.x - A.ox) * A.nx + (m.y - A.oy) * A.ny;         /* 방 안쪽이 + */
-    if (dn < -out || dn > inn || t < -out || t > A.len + out) continue;
+    if (dn < -out || dn > inn || t < A.lo - out || t > A.hi + out) continue;      /* p68 — 따낸 토막은 아님 */
     if (!c || Math.abs(dn) < c.d) c = { wall, A, t, d:Math.abs(dn) };
   }
   if (!c) return toast("벽 가까이를 눌러 주세요", 2400);
-  const len = c.A.len, w = Math.min(OP_DEF[kind], len);
-  let x0 = clampInt(Math.round(c.t - w / 2), 0, Math.max(0, len - w)), note = "";
+  const len = c.A.len, lo = c.A.lo, hi = c.A.hi, w = Math.min(OP_DEF[kind], hi - lo);
+  let x0 = clampInt(Math.round(c.t - w / 2), lo, Math.max(lo, hi - w)), note = "";
   /* 같은 벽에서 겹치면 가장 가까운 빈 틈으로. 콘센트↔창문은 겹쳐도 된다(창 아래 콘센트는 흔하다) */
   const segs = [];
   for (const k of ["door", "win", "out"]){
@@ -5970,7 +6130,7 @@ function placeOpening(m){
   const hit = x => segs.some(s => x < s.x0 + s.w && s.x0 < x + w);
   if (hit(x0)){
     const ok = segs.flatMap(s => [s.x0 - w, s.x0 + s.w])
-      .filter(x => x >= 0 && x <= len - w && !hit(x)).sort((a, b) => Math.abs(a - x0) - Math.abs(b - x0));
+      .filter(x => x >= lo && x <= hi - w && !hit(x)).sort((a, b) => Math.abs(a - x0) - Math.abs(b - x0));
     if (ok.length) x0 = Math.round(ok[0]); else note = " — 다른 것과 겹쳐요";
   }
   const before = snapshot();
@@ -7093,7 +7253,9 @@ function sharePayload(){
     D:(r.doors || []).map(o => [o.wall, o.x0, o.w, o.hinge, o.swing]),
     W:(r.windows || []).map(o => [o.wall, o.x0, o.w, o.sill, o.head]),
     /* p49 — 콘센트가 있을 때만 싣는다(없으면 링크 길이 그대로) */
-    ...((r.outlets || []).length ? { O:r.outlets.map(o => [o.wall, o.x0, o.w]) } : {}) }, c:cats, i:its };
+    ...((r.outlets || []).length ? { O:r.outlets.map(o => [o.wall, o.x0, o.w]) } : {}),
+    /* p68 — ㄱ자 방일 때만 */
+    ...(r.notch ? { N:[r.notch.corner, r.notch.w, r.notch.d] } : {}) }, c:cats, i:its };
 }
 async function shareLink(){
   const p = sharePayload(); if (!p) return null;
@@ -7141,9 +7303,10 @@ function shareRoom(o){
   const nm = typeof o.r.n === "string" ? o.r.n.replace(/[\u0000-\u001f]/g, "").trim() : "";
   const name = (nm || "받은 방").slice(0, 24);
   const arr = (a, n) => Array.isArray(a) ? a.filter(Array.isArray).slice(0, n) : [];
-  const doors = adoptDoors({ doors: arr(o.r.D, 12).map(a => ({ wall:a[0], x0:a[1], w:a[2], hinge:a[3] === "start" ? "start" : "end", swing:a[4] })) }, w, d);
-  const windows = adoptWindows({ windows: arr(o.r.W, 12).map(a => ({ wall:a[0], x0:a[1], w:a[2], sill:a[3], head:a[4] })) }, w, d, ceil);
-  const outlets = adoptOutlets({ outlets: arr(o.r.O, 24).map(a => ({ wall:a[0], x0:a[1], w:a[2] })) }, w, d);
+  const notch = Array.isArray(o.r.N) ? adoptNotch({ corner:o.r.N[0], w:o.r.N[1], d:o.r.N[2] }, w, d) : null;   /* p68 */
+  const doors = adoptDoors({ notch, doors: arr(o.r.D, 12).map(a => ({ wall:a[0], x0:a[1], w:a[2], hinge:a[3] === "start" ? "start" : "end", swing:a[4] })) }, w, d);
+  const windows = adoptWindows({ notch, windows: arr(o.r.W, 12).map(a => ({ wall:a[0], x0:a[1], w:a[2], sill:a[3], head:a[4] })) }, w, d, ceil);
+  const outlets = adoptOutlets({ notch, outlets: arr(o.r.O, 24).map(a => ({ wall:a[0], x0:a[1], w:a[2] })) }, w, d);
   const cats = [];
   for (const c of o.c){
     if (!Array.isArray(c) || typeof c[0] !== "string") return null;
@@ -7158,7 +7321,7 @@ function shareRoom(o){
     const fw = rot % 180 === 0 ? s.w : s.d, fd = rot % 180 === 0 ? s.d : s.w;
     items.push({ c:a[0], rot, x:clampInt(a[1], 0, Math.max(0, w - fw)), y:clampInt(a[2], 0, Math.max(0, d - fd)) });
   }
-  return { name, w, d, ceiling:ceil, doors, windows, outlets, cats, items };
+  return { name, w, d, ceiling:ceil, notch, doors, windows, outlets, cats, items };
 }
 async function readShareHash(h){
   const m = /^#([ru])=([A-Za-z0-9_-]+)$/.exec(h || "");
@@ -7178,7 +7341,7 @@ function importShared(sr){
   let x = 0; for (const r of state.rooms) x = Math.max(x, r.x + r.w + 600);
   let name = sr.name, k = 2;
   while (state.rooms.some(q => q.name === name)) name = sr.name.slice(0, 20) + " " + k++;
-  state.rooms.push({ id, name, w:sr.w, d:sr.d, ceiling:sr.ceiling, x:Math.round(x), y:0,
+  state.rooms.push({ id, name, w:sr.w, d:sr.d, ceiling:sr.ceiling, notch:sr.notch || null, x:Math.round(x), y:0,
                      doors:sr.doors, windows:sr.windows, outlets:sr.outlets || [], layouts:[], conf:null, todo:null });
   /* 같은 이름·같은 치수의 가구가 이미 있으면 그걸 쓴다 — 받을 때마다 가구 목록이 불어나지 않게 */
   const ids = sr.cats.map(c => {
