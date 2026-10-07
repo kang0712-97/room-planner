@@ -1862,7 +1862,7 @@ const ROOM_PRESETS = [
 ];
 
 /* 화면에 찍히는 판 번호. 실기에서 «고쳤는데 그대로다» 를 가르는 유일한 단서다. */
-const BUILD = "2026-10-05 · p68";
+const BUILD = "2026-10-05 · p69";
 
 const KEYOPT = "room-planner/opt";
 let opt = { score:true, walk:true, unit:"mm", guide:0 };
@@ -2535,8 +2535,11 @@ function drawHome(){
       g.setAttribute("style", `--d:${((d0 - (now - homeDraw.t0)) / 1000).toFixed(3)}s`);
       /* 벽 세 줄: 아랫변 하나 + 왼쪽·오른쪽 벽이 올라가 위 가운데에서 만난다(인트로와 같은 순서) */
       const B = r.y + r.d, M = r.x + r.w / 2;
-      for (const [c, d] of [["hw hw-b", `M${r.x} ${B}H${r.x + r.w}`], ["hw hw-s", `M${r.x} ${B}V${r.y}H${M + 11}`],
-                            ["hw hw-s", `M${r.x + r.w} ${B}V${r.y}H${M - 11}`]])
+      /* p69 — ㄱ자 방은 바깥선 하나가 한 바퀴 그려진다(네모 선이 남아 ㄱ자를 덮었다) */
+      const hw = r.notch ? [["hw hw-s", roomPath(r, r.x, r.y)]]
+        : [["hw hw-b", `M${r.x} ${B}H${r.x + r.w}`], ["hw hw-s", `M${r.x} ${B}V${r.y}H${M + 11}`],
+           ["hw hw-s", `M${r.x + r.w} ${B}V${r.y}H${M - 11}`]];
+      for (const [c, d] of hw)
         g.appendChild(el("path", { class:c, d, pathLength:1 }));
     }
     if (landRoom === r.id) g.setAttribute("visibility", "hidden");
@@ -2631,13 +2634,12 @@ function drawRoom(){
     g.appendChild(el("rect", { class:"body", x:it.x, y:it.y, width:f.w, height:f.d }));
     if (sp.fixed) g.appendChild(el("rect", { class:"hatch", x:it.x, y:it.y, width:f.w, height:f.d }));
     const cx = it.x + f.w/2, cy = it.y + f.d/2;
-    const vert = f.d > f.w * 1.35 && f.w < 700;
+    const { vert, fs:fsF } = furnFont(sp, f);         /* p69 — 돌려도 같은 글자 크기 */
     /* 글자 크기는 가로(f.w)뿐 아니라, 이름+치수 두 줄이 실제로 쌓이는 방향의 폭
        (vert 면 f.w, 아니면 f.d)도 함께 본다 — 안 그러면 더블클릭으로 90도 돌려
        가로는 늘고 세로(또는 그 반대)가 줄었을 때 글자가 커진 채로 남아
        가구 칸보다 커 보이고 아래위가 잘려 보인다. */
-    const cross = vert ? f.w : f.d;
-    const fs1 = Math.max(74, Math.min(150, f.w * 0.135, cross * 0.42)), fs2 = fs1 * 0.74;
+    const fs1 = fsF, fs2 = fs1 * 0.74;
     const tg = el("g", { transform:`translate(${cx} ${cy})` + (vert ? " rotate(-90)" : "") });
     tg.appendChild(txt({ x:0, y:-fs1*0.16, "text-anchor":"middle", "font-size":fs1, "font-weight":600 }, sp.name));
     tg.appendChild(txt({ x:0, y:fs1*0.92, "text-anchor":"middle", "font-size":fs2,
@@ -3742,6 +3744,15 @@ function outletHits(){
    어디에도 못 놓으면 뺀다 — 같은 숫자가 하단 알약·상태 패널에 이미 있다. */
 let pendingLabels = [];
 const textW = (s, fs) => [...s].reduce((a, ch) => a + (/[ㄱ-힝]/.test(ch) ? 1.0 : 0.62), 0) * fs;
+/* p69 — 가구 글자: 크기는 돌리기 전 모양으로 정하고(돌려도 같은 크기), 방향은 지금 모양대로.
+   지금 방향으로 글줄이 칸(양쪽 20씩 남김)을 넘칠 때만 줄인다 */
+function furnFont(sp, f){
+  const v0 = sp.d > sp.w * 1.35 && sp.w < 700;
+  const fs0 = Math.max(74, Math.min(150, (v0 ? sp.d : sp.w) * 0.135, (v0 ? sp.w : sp.d) * 0.42));
+  const vert = f.d > f.w * 1.35 && f.w < 700, run = (vert ? f.d : f.w) - 40;
+  const need = Math.max(textW(sp.name, 1), textW(`${sp.w} × ${sp.d}`, 0.74));
+  return { vert, fs: Math.max(74, Math.min(fs0, run / need)) };
+}
 const boxHit = (a, b) => a.x0 < b.x1 && b.x0 < a.x1 && a.y0 < b.y1 && b.y0 < a.y1;
 /* 선분 옆 자리 후보: 가운데 → 1/3 → 2/3, 각각 선의 양옆. 마지막은 선 위(바탕색 테두리로 읽힌다) */
 function besideLine(x1, y1, x2, y2, s, fs){
@@ -3763,8 +3774,7 @@ function placeLabels(){
   const bodies = inRoom().map(rectOf).map(q => ({ x0:q.x0, y0:q.y0, x1:q.x1, y1:q.y1 }));
   /* 가구 이름·규격 글자가 차지하는 상자 — drawRoom 의 글자 크기 공식을 그대로 따른다 */
   const names = inRoom().map(it => {
-    const f = foot(it), sp = spec(it), vert = f.d > f.w * 1.35 && f.w < 700;
-    const cross = vert ? f.w : f.d, fs1 = Math.max(74, Math.min(150, f.w * 0.135, cross * 0.42));
+    const f = foot(it), sp = spec(it), { vert, fs:fs1 } = furnFont(sp, f);      /* p69 — drawRoom 과 같은 글자 */
     const long = Math.max(textW(sp.name, fs1), textW(`${sp.w} × ${sp.d}`, fs1 * 0.74)) / 2 + 20, tall = fs1 * 1.2;
     const cx = it.x + f.w / 2, cy = it.y + f.d / 2;
     return vert ? { x0:cx - tall, x1:cx + tall, y0:cy - long, y1:cy + long }
